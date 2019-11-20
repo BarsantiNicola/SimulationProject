@@ -1,0 +1,4 @@
+#!/bin/sh
+cd `dirname $0`
+../src/bar -n .:../src $*
+# for shared lib, use: opp_run -l ../src/bar -n .:../src $*

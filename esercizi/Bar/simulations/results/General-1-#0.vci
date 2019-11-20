@@ -1,0 +1,24 @@
+file 507 1574268421                                             
+version 2
+run General-0-20191120-17:46:34-6182
+attr configname General
+attr datetime 20191120-17:46:34
+attr experiment General
+attr inifile omnetpp.ini
+attr iterationvars $0=1
+attr iterationvarsf 1-
+attr measurement $0=1
+attr network Bar
+attr processid 6182
+attr repetition 0
+attr replication #0
+attr resultdir results
+attr runnumber 0
+attr seedset 0
+param *.kitchen.T 1
+
+vector 0 Bar.kitchen.owner interArrivalTimeStats:vector ETV
+attr "" ""
+attr source interArrivalTime
+0	472 34 2 2 1.646440506913 1.646440506913 1 1.646440506913 1.646440506913 1.646440506913 2.7107663428039
+
