@@ -34,6 +34,7 @@ private:
 
  double parkingTime;
  double takeoffTime;
+ long numParked;
 
 protected:
  virtual void initialize();

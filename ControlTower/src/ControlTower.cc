@@ -40,13 +40,8 @@ void ControlTower::completed()
  double airSpaceQueueTime = Airspace.getMaxQueueTime();
  double parkingAreaQueueTime = ParkingArea.getMaxQueueTime();
 
- if((airSpaceQueueTime!=-1) && (parkingAreaQueueTime!=-1))
-  {
-   if(airSpaceQueueTime<parkingAreaQueueTime)
-    AirSpace.pop();
-   else
-    ParkingArea.pop();
-  }
+ if((airSpaceQueueTime==-1)&&(parkingAreaQueueTime==-1))
+  landingStripOccupied = false;
  else
   if(airSpaceQueueTime == -1)
    ParkingArea.pop();
@@ -54,7 +49,10 @@ void ControlTower::completed()
    if(parkingAreaQueueTime == -1)
     AirSpace.pop();
    else
-    landingStripOccupied = false;
+    if(airSpaceQueueTime<parkingAreaQueueTime)
+     AirSpace.pop();
+    else
+     ParkingArea.pop();
 }
 
 

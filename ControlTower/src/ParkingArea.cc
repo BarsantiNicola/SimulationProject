@@ -27,6 +27,7 @@ void ParkingArea::initialize()
  isTakeoffTimeRandom = par("isTakeoffTimeRandom").boolValue();
  takeoffTimeRate = par("takeoffTimeRate").doubleValue();
  departQueue = new cQueue();
+ numParked = 0;
 }
 
 void ParkingArea::finish()
@@ -41,6 +42,7 @@ void ParkingArea::handleMessage(Airplane* airplane)
   {
    airplane->setQueueArrival(simTime().dbl());
    departQueue->insert(airplane);
+   numParked--;
    if(controlTower.notify())
     pop();
   }
@@ -51,6 +53,7 @@ void ParkingArea::handleMessage(Airplane* airplane)
    else
     parkingTime = parkingTimeRate;
    scheduleAt(simTime().dbl()+parkingTime, airplane);
+   numParked++;
    ControlTower.completed();
   }
 }
