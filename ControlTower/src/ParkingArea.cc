@@ -49,7 +49,7 @@ void ParkingArea::handleMessage(Airplane* airplane)
  else
   {
    if(isParkingTimeRandom)
-    parkingTime = exp(parkingTimeRate);
+    parkingTime = exponential(parkingTimeRate);
    else
     parkingTime = parkingTimeRate;
    scheduleAt(simTime().dbl()+parkingTime, airplane);
@@ -64,7 +64,7 @@ void ParkingArea::pop()
  Airplane* airplane = (Airplane*)departQueue->pop();
 
  if(isTakeoffTimeRandom)
-  takeoffTime = exp(takeoffTimeRate);
+  takeoffTime = exponential(takeoffTimeRate);
  else
   takeoffTime = takeoffTimeRate;
  send(airplane,"out",takeoffTime);

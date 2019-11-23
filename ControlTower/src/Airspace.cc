@@ -31,7 +31,7 @@ void Airspace::initialize()
 
 
  if(isArrivalRateRandom)
-  nextArrival = exp(interArrivalRate);
+  nextArrival = exponential(interArrivalRate);
  else
   nextArrival = interArrivalRate;
  holdingQueue = new cQueue();
@@ -56,7 +56,7 @@ void Airspace::handleMessage(Airplane* airplane)
    if(airplane->getId() < 1000000000)  //Stop auto-generation at the 1G plane
     {
      if(isArrivalRateRandom)
-      nextArrival = exp(interArrivalRate);
+      nextArrival = exponential(interArrivalRate);
      else
       nextArrival = interArrivalRate;
      scheduleAt(simTime().dbl()+nextArrival,new Airplane());
@@ -74,7 +74,7 @@ void Airspace::pop()
  Airplane* airplane = (Airplane*)holdingQueue->pop();
 
  if(isLandingTimeRandom)
-  landingTime = exp(landingTimeRate);
+  landingTime = exponential(landingTimeRate);
  else
   landingTime = landingTimeRate;
  send(airplane,"out",landingTime);
