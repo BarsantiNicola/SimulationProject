@@ -1,0 +1,42 @@
+version 2
+run General-4-20191123-16:47:27-4425
+attr configname General
+attr datetime 20191123-16:47:27
+attr experiment General
+attr inifile omnetpp.ini
+attr iterationvars ""
+attr iterationvarsf ""
+attr measurement ""
+attr network ProducerConsumer
+attr processid 4425
+attr repetition 4
+attr replication #4
+attr resultdir results
+attr runnumber 4
+attr seedset 4
+
+scalar ProducerConsumer.consumer1 ResponseTime:avg 23.381251494001
+attr "" ""
+attr source responseArrived
+scalar ProducerConsumer.consumer2 ResponseTime:avg 23.415918303
+attr "" ""
+attr source responseArrived
+scalar ProducerConsumer.producer1 QueueLength:min 1
+attr "" ""
+attr source newRequest
+scalar ProducerConsumer.producer1 QueueLength:max 17
+attr "" ""
+attr source newRequest
+scalar ProducerConsumer.producer1 QueueLength:avg 7.181835
+attr "" ""
+attr source newRequest
+scalar ProducerConsumer.producer2 QueueLength:min 1
+attr "" ""
+attr source newRequest
+scalar ProducerConsumer.producer2 QueueLength:max 18
+attr "" ""
+attr source newRequest
+scalar ProducerConsumer.producer2 QueueLength:avg 7.180125
+attr "" ""
+attr source newRequest
+

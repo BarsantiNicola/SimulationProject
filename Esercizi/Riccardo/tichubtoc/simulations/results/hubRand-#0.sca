@@ -1,0 +1,32 @@
+version 2
+run hubRand-0-20191123-16:28:17-2078
+attr configname hubRand
+attr datetime 20191123-16:28:17
+attr experiment hubRand
+attr inifile omnetpp.ini
+attr iterationvars ""
+attr iterationvarsf ""
+attr measurement ""
+attr network Tictoc
+attr processid 2078
+attr repetition 0
+attr replication #0
+attr resultdir results
+attr runnumber 0
+attr seedset 0
+param **.hub.randHub true
+param **.tic.sendInitialMessage true
+
+scalar Tictoc.tic countMsg:count 126
+attr "" ""
+attr source msgArrived
+scalar Tictoc.tic responseTime:avg 0.3968253968254
+attr "" ""
+attr source msgArrived
+scalar Tictoc.toc countMsg:count 124
+attr "" ""
+attr source msgArrived
+scalar Tictoc.toc responseTime:avg 0.39838709677419
+attr "" ""
+attr source msgArrived
+
