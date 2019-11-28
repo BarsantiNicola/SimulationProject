@@ -1,0 +1,84 @@
+$call
+quantileCI(x = subsample, prob = quant, method = "asymptotic")
+
+$estimate
+        25% 
+0.007485793 
+
+$CI
+[1] 0.00711865 0.00789183
+attr(,"(asymptotic) confidence level")
+[1] 0.95
+
+$call
+quantileCI(x = subsample, prob = quant, method = "asymptotic")
+
+$estimate
+      50% 
+0.0178774 
+
+$CI
+[1] 0.0173703 0.0184895
+attr(,"(asymptotic) confidence level")
+[1] 0.95
+
+$call
+quantileCI(x = subsample, prob = quant, method = "asymptotic")
+
+$estimate
+      75% 
+0.0348067 
+
+$CI
+[1] 0.0339271 0.0357281
+attr(,"(asymptotic) confidence level")
+[1] 0.95
+
+$call
+quantileCI(x = subsample, prob = quant, method = "asymptotic")
+
+$estimate
+       90% 
+0.05855522 
+
+$CI
+[1] 0.0567500 0.0601786
+attr(,"(asymptotic) confidence level")
+[1] 0.95
+
+$call
+quantileCI(x = subsample, prob = quant, method = "asymptotic")
+
+$estimate
+       95% 
+0.07678523 
+
+$CI
+[1] 0.0738574 0.0796271
+attr(,"(asymptotic) confidence level")
+[1] 0.95
+
+$call
+quantileCI(x = subsample, prob = quant, method = "asymptotic")
+
+$estimate
+    98% 
+0.10002 
+
+$CI
+[1] 0.097397 0.104552
+attr(,"(asymptotic) confidence level")
+[1] 0.95
+
+$call
+quantileCI(x = subsample, prob = quant, method = "asymptotic")
+
+$estimate
+      99% 
+0.1145976 
+
+$CI
+[1] 0.110187 0.120626
+attr(,"(asymptotic) confidence level")
+[1] 0.95
+
