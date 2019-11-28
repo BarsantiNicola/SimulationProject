@@ -1,4 +1,0 @@
-package airport;
-
-simple ControlTower{
-}
