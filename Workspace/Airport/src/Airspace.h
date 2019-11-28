@@ -28,8 +28,6 @@ namespace airport{
         public:
             virtual double getMaxQueueTime();
             virtual void pop();
-
     };
-
 }; //namespace
 #endif

@@ -27,23 +27,27 @@ namespace airport {
 
     void ControlTower::completed(){
         Enter_Method("completed()");
-        double airSpaceQueueTime = (check_and_cast<Airspace*>(airspace))->getMaxQueueTime();
-        double parkingAreaQueueTime = (check_and_cast<ParkingArea*>(parkingArea))->getMaxQueueTime();
+        try{
+            double airSpaceQueueTime = (check_and_cast<Airspace*>(airspace))->getMaxQueueTime();
+            double parkingAreaQueueTime = (check_and_cast<ParkingArea*>(parkingArea))->getMaxQueueTime();
 
-        if(airSpaceQueueTime < 0 && parkingAreaQueueTime < 0)
-            landingStripOccupied = false;
-        else
-            if(airSpaceQueueTime < 0)
-                check_and_cast<ParkingArea*>(parkingArea)->pop();
+            if(airSpaceQueueTime < 0 && parkingAreaQueueTime < 0)
+                landingStripOccupied = false;
             else
-                if(parkingAreaQueueTime < 0)
-                    check_and_cast<Airspace*>(airspace)->pop();
+                if(airSpaceQueueTime < 0)
+                    check_and_cast<ParkingArea*>(parkingArea)->pop();
                 else
-                    if(airSpaceQueueTime < parkingAreaQueueTime)
+                    if(parkingAreaQueueTime < 0)
                         check_and_cast<Airspace*>(airspace)->pop();
                     else
-                        check_and_cast<ParkingArea*>(parkingArea)->pop();
-
-        EV<<"completed() has been called"<<endl;
+                        if(airSpaceQueueTime < parkingAreaQueueTime)
+                            check_and_cast<Airspace*>(airspace)->pop();
+                        else
+                            check_and_cast<ParkingArea*>(parkingArea)->pop();
+            EV<<"completed() has been called"<<endl;
+        }catch(const cRuntimeError& e){
+            EV<<"check_and_cast() error"<<endl;
+            EV<<e.what()<<endl;
+        }
     }
 }; //namespace

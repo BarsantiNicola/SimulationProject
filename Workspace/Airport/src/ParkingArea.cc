@@ -23,39 +23,47 @@ namespace airport {
 
     void ParkingArea::handleMessage(cMessage* airplane){
         controlTower = getModuleByPath("Airport.aerodrome.controltower");
-        if(airplane->isSelfMessage()){   //New airplane arrived
-            ((Airplane*)airplane)->setQueueArrival(simTime().dbl());
-            departQueue->insert(airplane);
-            numParked--;
-            if(check_and_cast<ControlTower*>(controlTower)->notify())
-                pop();
-        }
-        else{
-            if(isParkingTimeRandom)
-                parkingTime = exponential(parkingTimeRate);
-            else
-                parkingTime = parkingTimeRate;
-            scheduleAt(simTime() + parkingTime, airplane);
-            numParked++;
-            (check_and_cast<ControlTower*>(controlTower))->completed();
+        try{
+            if(airplane->isSelfMessage()){   //New airplane arrived
+                ((Airplane*)airplane)->setQueueArrival(simTime().dbl());
+                departQueue->insert(airplane);
+                --numParked;
+                if(check_and_cast<ControlTower*>(controlTower)->notify()){
+                    if(isTakeoffTimeRandom)
+                        takeoffTime = exponential(takeoffTimeRate);
+                    else
+                        takeoffTime = takeoffTimeRate;
+                    sendDelayed((Airplane*)departQueue->pop(), takeoffTime, "out");
+                }
+            }
+            else{
+                if(isParkingTimeRandom)
+                    parkingTime = exponential(parkingTimeRate);
+                else
+                    parkingTime = parkingTimeRate;
+                scheduleAt(simTime() + parkingTime, airplane);
+                ++numParked;
+                (check_and_cast<ControlTower*>(controlTower))->completed();
+            }
+        }catch(const cRuntimeError& e){
+            EV<<"check_and_cast() error"<<endl;
+            EV<<e.what()<<endl;
         }
     }
 
     void ParkingArea::pop(){
         Enter_Method("pop()");
-        Airplane* airplane = (Airplane*)departQueue->pop();
         if(isTakeoffTimeRandom)
             takeoffTime = exponential(takeoffTimeRate);
         else
             takeoffTime = takeoffTimeRate;
-        sendDelayed(airplane, takeoffTime, "out");
+        sendDelayed((Airplane*)departQueue->pop(), takeoffTime, "out");
     }
 
     double ParkingArea::getMaxQueueTime(){
         Enter_Method("getMaxQueueTime()");
         if(departQueue->isEmpty())
             return -1;
-        else
-            return ((Airplane*)(departQueue->front()))->getQueueArrival();
+        return ((Airplane*)(departQueue->front()))->getQueueArrival();
     }
 }; //namespace
