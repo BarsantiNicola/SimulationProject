@@ -1,0 +1,4 @@
+package airport;
+
+simple ControlTower{
+}
