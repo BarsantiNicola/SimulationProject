@@ -1,24 +1,25 @@
 #ifndef __CONTROLTOWER_CONTROLTOWER_H_
 #define __CONTROLTOWER_CONTROLTOWER_H_
 
+class Airspace;                         //Forward declaration of the Airspace class
+class ParkingArea;                      //Forward declaration of the ParkingArea class
+
 #include <omnetpp.h>
-#include "Airspace.h"
-#include "ParkingArea.h"
 
 using namespace omnetpp;
 
 namespace airport
 {
+
   class ControlTower : public cSimpleModule
    {
     private:
      bool landingStripOccupied;              //Whether the landing strip is currently occupied by a takingoff or landing airplane
-     Airspace* airspace;                     //Used for cross-module call purposes
      ParkingArea* parkingArea;               //Used for cross-module call purposes
+     Airspace* airspace;                     //Used for cross-module call purposes
 
     protected:
-     virtual void initialize(int stage);
-     virtual int numInitStages() const{ return 2;}
+     virtual void initialize();
 
     public:
      virtual bool notify();                  //Notification that an airplane arrived in the holding or the departing queue, to which the Control Tower responds

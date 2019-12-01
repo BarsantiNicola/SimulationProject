@@ -25,14 +25,14 @@ namespace airport {
  * //An extension of the cMessage class representing an airplane
  * packet Airplane
  * {
- *     double queueArrival;
+ *     double queueArrivalTime;
  * }
  * </pre>
  */
 class Airplane : public ::omnetpp::cPacket
 {
   protected:
-    double queueArrival;
+    double queueArrivalTime;
 
   private:
     void copy(const Airplane& other);
@@ -51,8 +51,8 @@ class Airplane : public ::omnetpp::cPacket
     virtual void parsimUnpack(omnetpp::cCommBuffer *b) override;
 
     // field getter/setter methods
-    virtual double getQueueArrival() const;
-    virtual void setQueueArrival(double queueArrival);
+    virtual double getQueueArrivalTime() const;
+    virtual void setQueueArrivalTime(double queueArrivalTime);
 };
 
 inline void doParsimPacking(omnetpp::cCommBuffer *b, const Airplane& obj) {obj.parsimPack(b);}

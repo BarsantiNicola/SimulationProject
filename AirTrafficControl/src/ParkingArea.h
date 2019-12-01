@@ -1,6 +1,8 @@
 #ifndef __CONTROLTOWER_PARKINGAREA_H_
 #define __CONTROLTOWER_PARKINGAREA_H_
 
+class ControlTower;                    //Forward declaration of the ControlTower class
+
 #include <omnetpp.h>
 
 using namespace omnetpp;
@@ -24,11 +26,11 @@ namespace airport
     simsignal_t departQueueWaitingTime;
 
     /*------------------Other--------------------*/
-    long numParked;             //Number of airplanes currently parked
-    double nextParkingTime;     //Parking time of the next airplane
-    double nextTakeoffTime;     //Takeoff time of the next airplane
-    cQueue* departQueue;        //FIFO queue of airplanes waiting for takeoff
-    cModule* controlTower;      //Used for cross-module call purposes
+    long numParked;               //Number of airplanes currently parked
+    double nextParkingTime;       //Parking time of the next airplane
+    double nextTakeoffTime;       //Takeoff time of the next airplane
+    cQueue* departQueue;          //FIFO queue of airplanes waiting for takeoff
+    ControlTower* controlTower;   //Used for cross-module call purposes
 
    protected:
     virtual void initialize();
@@ -37,7 +39,7 @@ namespace airport
     virtual ~ParkingArea();
 
    public:
-    virtual double getMaxQueueTime();  //Returns the time the oldest plane entered the departing queue, or "-1" if the queue is empty (called by the ControlTower module)
+    virtual double getMaxQueueTime();  //Returns the time the oldest plane entered the departing queue, or "-1.0" if the queue is empty (called by the ControlTower module)
     virtual void go();                 //Starts the takeoff of the oldest plane in the departing queue (called by the ControlTower module)
   };
 

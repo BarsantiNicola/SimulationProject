@@ -1,7 +1,9 @@
-#ifndef __CONTROLTOWER_TCX_H
-#define __CONTROLTOWER_TCX_H
+#ifndef __CONTROLTOWER_AIRSPACE_H
+#define __CONTROLTOWER_AIRSPACE_H
 
 #include <omnetpp.h>
+
+class ControlTower;               //Forward declaration of the ControlTower class
 
 #define TOTAL_AIRPLANES 1000000   //Total number of airplanes that will arrive in the system (= sample size)
 
@@ -9,7 +11,6 @@ using namespace omnetpp;
 
 namespace airport
 {
-
   class Airspace : public cSimpleModule
    {
     private:
@@ -26,10 +27,10 @@ namespace airport
      simsignal_t airportResponseTime;
 
      /*------------------Other--------------------*/
-     double nextArrival;         //Arrival time of the next airplane
-     double nextLandingTime;     //Landing time of the next airplane
-     cQueue* holdingQueue;       //FIFO queue of airplanes waiting for landing
-     cModule* controlTower;      //Used for cross-module call purposes
+     double nextArrival;          //Arrival time of the next airplane
+     double nextLandingTime;      //Landing time of the next airplane
+     cQueue* holdingQueue;        //FIFO queue of airplanes waiting for landing
+     ControlTower* controlTower;  //Used for cross-module call purposes
 
     protected:
      virtual void initialize();
@@ -38,7 +39,7 @@ namespace airport
      virtual ~Airspace();
 
     public:
-     virtual double getMaxQueueTime(); //Returns the time the oldest plane entered the holding queue, or "-1" if the queue is empty (called by the ControlTower module)
+     virtual double getMaxQueueTime(); //Returns the time the oldest plane entered the holding queue, or "-1.0" if the queue is empty (called by the ControlTower module)
      virtual void go();                //Starts the landing of the oldest plane in the holding queue (called by the ControlTower module)
   };
 

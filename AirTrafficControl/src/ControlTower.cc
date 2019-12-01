@@ -1,34 +1,30 @@
 #include "Airplane_m.h"
-#include "ControlTower.h"                    //TODO: Remove?
+#include "Airspace.h"         //Required to avoid the "Invalid use of incomplete type" error when dereferencing the "airspace" pointer
+#include "ParkingArea.h"      //Required to avoid the "Invalid use of incomplete type" error when dereferencing the "parkingarea" pointer
+#include "ControlTower.h"
 
 namespace airport
 {
  Define_Module(ControlTower);
 
  /* Module initializing function */
- void ControlTower::initialize(int stage)
+ void ControlTower::initialize()
   {
-   if(stage == 1)
+   landingStripOccupied = false;       //Initialize the landing strip as available
+
+   //this try-catch block is used to initialize the pointers to the Airspace and the ParkingArea addressing the formal possibility of the cast_and_check function raising a "cRunTimeError" exception (which should never happen)
+   try
     {
-     try                                   //This try block was inserted to catch possible cRuntimeError exceptions raised by the check_and_cast<> function (which should never happen)
-      {
-       landingStripOccupied = false;       //Initialize the landing strip as available
-       airspace = check_and_cast<Airspace*>(getModuleByPath("AirTrafficControl.airspace"));                     //Retrieve the address of the airspace module
-       parkingArea = check_and_cast<ParkingArea*>(getModuleByPath("AirTrafficControl.airport.parkingarea"));    //Retrieve the address of the parkingarea module
-      }
-     catch(const cRuntimeError& e)         //Should never happen
-      {
-       char err[60];
-
-       //Displays an error message (pausing the simulation in the QTENV interface)
-       sprintf(err,"WARNING: check_and_cast error, event number: %li", getSimulation()->getEventNumber());
-       getSimulation()->getActiveEnvir()->alert(err);
-
-       //Prints the stack trace
-       EV<<e.what()<<endl;
-      }
+     airspace = check_and_cast<Airspace*>(getModuleByPath("AirTrafficControl.airspace"));
+     parkingArea = check_and_cast<ParkingArea*>(getModuleByPath("AirTrafficControl.airport.parkingarea"));
+    }
+   catch(const cRuntimeError& e)
+    {
+     getSimulation()->getActiveEnvir()->alert("[FATAL]: \"ControlTower\" module couldn't retrieve the addresses of the \"Airspace\"/\"ParkingArea\" modules");   //Display an error message (halting the simulation in the QTENV interface)
+     EV<<e.what()<<endl;                                                                                                                                         //Print the stack trace
     }
   }
+
 
  /* Notification that an airplane arrived in the holding or the departing queue (called by the Airspace and ParkingArea modules) */
  bool ControlTower::notify()
@@ -41,6 +37,7 @@ namespace airport
     }
    return false;                      //Inform the caller that the airplane must wait for its turn to use the landing strip
   }
+
 
  /* Notification that an airplane completed its takeoff or landing (called by the Airspace and ParkingArea modules) */
  void ControlTower::completed()
