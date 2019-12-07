@@ -1,0 +1,12 @@
+
+	One Sample t-test
+
+data:  subsample
+t = 89.191, df = 7999, p-value < 2.2e-16
+alternative hypothesis: true mean is not equal to 0
+95 percent confidence interval:
+ 0.4056777 0.4239107
+sample estimates:
+mean of x 
+0.4147942 
+
