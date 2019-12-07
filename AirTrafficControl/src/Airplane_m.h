@@ -23,15 +23,17 @@ namespace airport {
  * Class generated from <tt>Airplane.msg:5</tt> by nedtool.
  * <pre>
  * //An extension of the cMessage class representing an airplane
- * packet Airplane
+ * message Airplane
  * {
- *     double queueArrivalTime;
+ *     long airplaneID;             //The Airplane ID (Note that the "messageID" field of the "cMessage" class could not be used due to internal message duplications performed by the simulator)
+ *     double queueArrivalTime;     //Initialized when the airplane is inserted into a queue for statistic collection purposes
  * }
  * </pre>
  */
-class Airplane : public ::omnetpp::cPacket
+class Airplane : public ::omnetpp::cMessage
 {
   protected:
+    long airplaneID;
     double queueArrivalTime;
 
   private:
@@ -51,6 +53,8 @@ class Airplane : public ::omnetpp::cPacket
     virtual void parsimUnpack(omnetpp::cCommBuffer *b) override;
 
     // field getter/setter methods
+    virtual long getAirplaneID() const;
+    virtual void setAirplaneID(long airplaneID);
     virtual double getQueueArrivalTime() const;
     virtual void setQueueArrivalTime(double queueArrivalTime);
 };

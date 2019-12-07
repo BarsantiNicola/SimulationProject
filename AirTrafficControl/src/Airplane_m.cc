@@ -180,12 +180,13 @@ inline std::ostream& operator<<(std::ostream& out, const std::vector<T,A>& vec)
 
 Register_Class(Airplane)
 
-Airplane::Airplane(const char *name, short kind) : ::omnetpp::cPacket(name,kind)
+Airplane::Airplane(const char *name, short kind) : ::omnetpp::cMessage(name,kind)
 {
+    this->airplaneID = 0;
     this->queueArrivalTime = 0;
 }
 
-Airplane::Airplane(const Airplane& other) : ::omnetpp::cPacket(other)
+Airplane::Airplane(const Airplane& other) : ::omnetpp::cMessage(other)
 {
     copy(other);
 }
@@ -197,26 +198,39 @@ Airplane::~Airplane()
 Airplane& Airplane::operator=(const Airplane& other)
 {
     if (this==&other) return *this;
-    ::omnetpp::cPacket::operator=(other);
+    ::omnetpp::cMessage::operator=(other);
     copy(other);
     return *this;
 }
 
 void Airplane::copy(const Airplane& other)
 {
+    this->airplaneID = other.airplaneID;
     this->queueArrivalTime = other.queueArrivalTime;
 }
 
 void Airplane::parsimPack(omnetpp::cCommBuffer *b) const
 {
-    ::omnetpp::cPacket::parsimPack(b);
+    ::omnetpp::cMessage::parsimPack(b);
+    doParsimPacking(b,this->airplaneID);
     doParsimPacking(b,this->queueArrivalTime);
 }
 
 void Airplane::parsimUnpack(omnetpp::cCommBuffer *b)
 {
-    ::omnetpp::cPacket::parsimUnpack(b);
+    ::omnetpp::cMessage::parsimUnpack(b);
+    doParsimUnpacking(b,this->airplaneID);
     doParsimUnpacking(b,this->queueArrivalTime);
+}
+
+long Airplane::getAirplaneID() const
+{
+    return this->airplaneID;
+}
+
+void Airplane::setAirplaneID(long airplaneID)
+{
+    this->airplaneID = airplaneID;
 }
 
 double Airplane::getQueueArrivalTime() const
@@ -259,7 +273,7 @@ class AirplaneDescriptor : public omnetpp::cClassDescriptor
 
 Register_ClassDescriptor(AirplaneDescriptor)
 
-AirplaneDescriptor::AirplaneDescriptor() : omnetpp::cClassDescriptor("airport::Airplane", "omnetpp::cPacket")
+AirplaneDescriptor::AirplaneDescriptor() : omnetpp::cClassDescriptor("airport::Airplane", "omnetpp::cMessage")
 {
     propertynames = nullptr;
 }
@@ -294,7 +308,7 @@ const char *AirplaneDescriptor::getProperty(const char *propertyname) const
 int AirplaneDescriptor::getFieldCount() const
 {
     omnetpp::cClassDescriptor *basedesc = getBaseClassDescriptor();
-    return basedesc ? 1+basedesc->getFieldCount() : 1;
+    return basedesc ? 2+basedesc->getFieldCount() : 2;
 }
 
 unsigned int AirplaneDescriptor::getFieldTypeFlags(int field) const
@@ -307,8 +321,9 @@ unsigned int AirplaneDescriptor::getFieldTypeFlags(int field) const
     }
     static unsigned int fieldTypeFlags[] = {
         FD_ISEDITABLE,
+        FD_ISEDITABLE,
     };
-    return (field>=0 && field<1) ? fieldTypeFlags[field] : 0;
+    return (field>=0 && field<2) ? fieldTypeFlags[field] : 0;
 }
 
 const char *AirplaneDescriptor::getFieldName(int field) const
@@ -320,16 +335,18 @@ const char *AirplaneDescriptor::getFieldName(int field) const
         field -= basedesc->getFieldCount();
     }
     static const char *fieldNames[] = {
+        "airplaneID",
         "queueArrivalTime",
     };
-    return (field>=0 && field<1) ? fieldNames[field] : nullptr;
+    return (field>=0 && field<2) ? fieldNames[field] : nullptr;
 }
 
 int AirplaneDescriptor::findField(const char *fieldName) const
 {
     omnetpp::cClassDescriptor *basedesc = getBaseClassDescriptor();
     int base = basedesc ? basedesc->getFieldCount() : 0;
-    if (fieldName[0]=='q' && strcmp(fieldName, "queueArrivalTime")==0) return base+0;
+    if (fieldName[0]=='a' && strcmp(fieldName, "airplaneID")==0) return base+0;
+    if (fieldName[0]=='q' && strcmp(fieldName, "queueArrivalTime")==0) return base+1;
     return basedesc ? basedesc->findField(fieldName) : -1;
 }
 
@@ -342,9 +359,10 @@ const char *AirplaneDescriptor::getFieldTypeString(int field) const
         field -= basedesc->getFieldCount();
     }
     static const char *fieldTypeStrings[] = {
+        "long",
         "double",
     };
-    return (field>=0 && field<1) ? fieldTypeStrings[field] : nullptr;
+    return (field>=0 && field<2) ? fieldTypeStrings[field] : nullptr;
 }
 
 const char **AirplaneDescriptor::getFieldPropertyNames(int field) const
@@ -411,7 +429,8 @@ std::string AirplaneDescriptor::getFieldValueAsString(void *object, int field, i
     }
     Airplane *pp = (Airplane *)object; (void)pp;
     switch (field) {
-        case 0: return double2string(pp->getQueueArrivalTime());
+        case 0: return long2string(pp->getAirplaneID());
+        case 1: return double2string(pp->getQueueArrivalTime());
         default: return "";
     }
 }
@@ -426,7 +445,8 @@ bool AirplaneDescriptor::setFieldValueAsString(void *object, int field, int i, c
     }
     Airplane *pp = (Airplane *)object; (void)pp;
     switch (field) {
-        case 0: pp->setQueueArrivalTime(string2double(value)); return true;
+        case 0: pp->setAirplaneID(string2long(value)); return true;
+        case 1: pp->setQueueArrivalTime(string2double(value)); return true;
         default: return false;
     }
 }
