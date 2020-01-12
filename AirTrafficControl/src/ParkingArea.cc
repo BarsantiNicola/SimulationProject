@@ -56,7 +56,7 @@ namespace airport
        EV<<"[ParkingArea]: The airplane N°"<<((Airplane*)airplane)->getAirplaneID()<<" has finished parking, and the control tower reports that is immediately available for takeoff"<<endl;
        emit(departQueueWaitingTime,0.0);                                      //Collect a sample of the departing queue waiting time (in this particular case, 0)
        if(isTakeoffTimeRandom)                                                //Compute the airplane's takeoff time, depending whether it is constant or random
-        nextTakeoffTime = exponential(takeoffTime);
+        nextTakeoffTime = exponential(takeoffTime,1);
        else
         nextTakeoffTime = takeoffTime;
        sendDelayed((Airplane*)airplane, nextTakeoffTime, "out");              //Start the airplane's takeoff, which will complete in a "nextTakeoffTime" time
@@ -74,7 +74,7 @@ namespace airport
      emit(parkedPlanes,numParked);                                            //Collect a sample of the number of parked planes
      ++numParked;                                                             //Increase the number of parked airplanes
      if(isParkingTimeRandom)                                                  //Compute the airplane's parking time, depending whether it is constant or random
-      nextParkingTime = exponential(parkingTime);
+      nextParkingTime = exponential(parkingTime,0);
      else
       nextParkingTime = parkingTime;
      scheduleAt(simTime() + nextParkingTime, airplane);                       //Schedule when the airplane will expire its parking time
@@ -101,7 +101,7 @@ namespace airport
    EV<<"[ParkingArea]: The Control Tower notifies that the airplane N°"<<airplane->getAirplaneID()<<" is allowed to takeoff"<<endl;
    emit(departQueueWaitingTime,simTime().dbl()-airplane->getQueueArrivalTime());   //Collect a sample of the departing queue waiting time
    if(isTakeoffTimeRandom)                                                         //Compute the airplane's takeoff time, depending whether it is constant or random
-    nextTakeoffTime = exponential(takeoffTime);
+    nextTakeoffTime = exponential(takeoffTime,1);
    else
     nextTakeoffTime = takeoffTime;
    sendDelayed(airplane, nextTakeoffTime, "out");                                  //Start the airplane's takeoff, which will complete in a "nextTakeoffTime" time

@@ -27,10 +27,11 @@ namespace airport
      simsignal_t airportResponseTime;
 
      /*------------------Other--------------------*/
-     double nextArrival;          //Arrival time of the next airplane
-     double nextLandingTime;      //Landing time of the next airplane
-     cQueue* holdingQueue;        //FIFO queue of airplanes waiting for landing
-     ControlTower* controlTower;  //Used for cross-module call purposes
+     unsigned long int departedPlanes; //Number of airplanes that departed from airport (used to stop the simulation after TOTAL_AIRPLANES samples have been collected)
+     double nextArrival;               //Arrival time of the next airplane
+     double nextLandingTime;           //Landing time of the next airplane
+     cQueue* holdingQueue;             //FIFO queue of airplanes waiting for landing
+     ControlTower* controlTower;       //Used for cross-module call purposes
 
     protected:
      virtual void initialize();

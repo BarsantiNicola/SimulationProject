@@ -22,6 +22,7 @@ namespace airport
    airportResponseTime = registerSignal("AirportResponseTime");
 
    //Other Members Initializations
+   departedPlanes = 0;
    holdingQueue = new cQueue();
 
    //this try-catch block is used to initialize the pointer to the ControlTower addressing the formal possibility of the cast_and_check function raising a "cRunTimeError" exception (which should never happen)
@@ -38,7 +39,7 @@ namespace airport
    Airplane* firstPlane = new Airplane();
    firstPlane->setAirplaneID(1);                                                                                                              //Set the first airplane's ID
    if(isInterArrivalTimeRandom)                                                                                                               //Compute the first airplane's arrival time, depending whether it is constant or random
-    nextArrival = exponential(interArrivalTime);
+    nextArrival = exponential(interArrivalTime,0);
    else
     nextArrival = interArrivalTime;
    scheduleAt(nextArrival, firstPlane);                                                                                                       //Schedule the first airplane's arrival at time "nextArrival"
@@ -66,7 +67,7 @@ namespace airport
         EV<<"[Airspace]: The airplane N°"<<((Airplane*)airplane)->getAirplaneID()<<" has arrived, and the control tower reports that is immediately available for landing"<<endl;
         emit(holdingQueueWaitingTime,0.0);                                       //Collect a sample of the departing queue waiting time (in this particular case, 0)
         if(isLandingTimeRandom)                                                  //Compute the airplane's landing time, depending whether it is constant or random
-         nextLandingTime = exponential(landingTime);
+         nextLandingTime = exponential(landingTime,1);
         else
          nextLandingTime = landingTime;
         sendDelayed(airplane, nextLandingTime, "out");                           //Start the airplane's landing, which will complete in a "nextLandingTime" time
@@ -77,23 +78,23 @@ namespace airport
         ((Airplane*)airplane)->setQueueArrivalTime(simTime().dbl());             //Set the airplane's arrival time into the holding queue
         holdingQueue->insert(airplane);                                          //Insert the airplane into the holding queue
        }
-      if(((Airplane*)airplane)->getAirplaneID() < TOTAL_AIRPLANES)               //If less than TOTAL_AIRPLANES have arrived, schedule the next arrival
-       {
-        Airplane* nextPlane = new Airplane();
-        nextPlane->setAirplaneID(((Airplane*)airplane)->getAirplaneID()+1);      //Set the ID of the next airplane
-        if(isInterArrivalTimeRandom)                                             //Compute the next airplane's arrival time, depending whether it is constant or random
-         nextArrival = exponential(interArrivalTime);
-        else
-         nextArrival = interArrivalTime;
-        scheduleAt(simTime() + nextArrival, nextPlane);                     //Schedule the next airplane's arrival
-       }
+      Airplane* nextPlane = new Airplane();                                      //Create the next airplane
+      nextPlane->setAirplaneID(((Airplane*)airplane)->getAirplaneID()+1);        //Set the ID of the next airplane
+      if(isInterArrivalTimeRandom)                                               //Compute the next airplane's arrival time, depending whether it is constant or random
+       nextArrival = exponential(interArrivalTime,0);
+      else
+       nextArrival = interArrivalTime;
+      scheduleAt(simTime() + nextArrival, nextPlane);                     //Schedule the next airplane's arrival
      }
     else                                                                         //Otherwise an airplane has finished its takeoff from the Parking Area
      {
       EV<<"[Airspace]: The airplane N°"<<((Airplane*)airplane)->getAirplaneID()<<" has taken off and has left the system"<<endl;
       emit(airportResponseTime,simTime().dbl()-airplane->getTimestamp().dbl());  //Collect a sample of the airport system response time
-      controlTower->completed();                                                 //Inform the Control Tower that the airplane's takeoff is complete
       delete(airplane);                                                          //Remove the airplane from the system
+      if(++departedPlanes < TOTAL_AIRPLANES)                                     //If less than TOTAL_AIRPLANES have departed from the system
+       controlTower->completed();                                                //Inform the Control Tower that the airplane's takeoff is complete
+      else                                                                       //Otherwise, end the simulation
+       endSimulation();
      }
    }
 
@@ -116,7 +117,7 @@ namespace airport
     EV<<"[Airspace]: The Control Tower notifies that the airplane N°"<<airplane->getAirplaneID()<<" is allowed to land"<<endl;
     emit(holdingQueueWaitingTime,simTime().dbl()-airplane->getQueueArrivalTime());  //Collect a sample of the holding queue waiting time
     if(isLandingTimeRandom)                                                         //Compute the airplane's landing time, depending whether it is constant or random
-     nextLandingTime = exponential(landingTime);
+     nextLandingTime = exponential(landingTime,1);
     else
      nextLandingTime = landingTime;
     sendDelayed(airplane, nextLandingTime, "out");                                  //Start the airplane's landing, which will complete in a "nextLandingTime" time
