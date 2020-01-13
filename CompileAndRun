@@ -1,0 +1,6 @@
+// Nella cartella ./SimulationProject/AirTrafficControl
+// Sostituire CONFIGURATION con una configurazione definita nel file omnet.ini
+opp_makemake --deep -f -o AirTrafficControl
+make clean
+make all
+opp_runall ./out/gcc-release/AirTrafficControl -u Cmdenv -c CONFIGURATION -f ./simulations/omnetpp.ini
