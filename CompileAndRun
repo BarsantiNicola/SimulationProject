@@ -1,4 +1,5 @@
 // https://doc.omnetpp.org/omnetpp/manual/
+// https://docs.omnetpp.org/tutorials/pandas/
 // Nella cartella ./SimulationProject/AirTrafficControl
 // Sostituire CONFIGURATION con una configurazione definita nel file omnet.ini (ex. DeterministicRegimeOverloaded)
 // options: -j8 -b4 (j #CPUs, b #batch)

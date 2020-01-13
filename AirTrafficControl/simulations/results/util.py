@@ -4,6 +4,9 @@ import os
 import fnmatch
 import shutil
 
+# Update the subsequent vector when adding new configuration to omnet.ini
+SIMULATIONS = ['DeterministicRegimeOverloaded']
+
 def parse_if_number(s):
     try: return float(s)
     except: return True if s=="true" else False if s=="false" else s if s else None
@@ -47,3 +50,10 @@ def getVecFileName():
         TODO: SCRIPT SECTION THAT ANALYZES ALL THE CSV GOES HERE
         '''
     print('Ended')
+
+def scavetool():
+    os.system('rm -f *.csv')
+    for sim in SIMULATIONS:
+        os.system('scavetool x ' + sim + '*.sca -o ' + sim + '.csv')
+    os.system('rm -f *.sca *.out *.vci *.vec')
+
