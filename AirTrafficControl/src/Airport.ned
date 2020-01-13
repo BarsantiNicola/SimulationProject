@@ -1,4 +1,4 @@
-package airport;
+package src;
 
 //The Airport
 module Airport

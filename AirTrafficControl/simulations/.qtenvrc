@@ -1,10 +1,10 @@
 [General]
-last-configname=Random_Balanced_10_5_5_J
-last-runnumber=1232
+last-configname=DeterministicRegimeOverloaded
+last-runnumber=108
 
 [RunModeProfiles]
 fast-max-animation-speed=nan
-fast-max-playback-speed=1e+6
+fast-max-playback-speed=1e+06
 fast-min-animation-speed=nan
 fast-min-playback-speed=1
 fast-playback-speed=1000

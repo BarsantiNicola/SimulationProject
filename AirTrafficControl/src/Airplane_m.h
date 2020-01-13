@@ -1,5 +1,5 @@
 //
-// Generated file, do not edit! Created by nedtool 5.5 from Airplane.msg.
+// Generated file, do not edit! Created by nedtool 5.5 from src/Airplane.msg.
 //
 
 #ifndef __AIRPORT_AIRPLANE_M_H
@@ -20,7 +20,7 @@
 namespace airport {
 
 /**
- * Class generated from <tt>Airplane.msg:5</tt> by nedtool.
+ * Class generated from <tt>src/Airplane.msg:5</tt> by nedtool.
  * <pre>
  * //An extension of the cMessage class representing an airplane
  * message Airplane

@@ -1,3 +1,3 @@
-package airport.simulations;
+package simulations;
 
 @license(LGPL);

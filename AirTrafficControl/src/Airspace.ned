@@ -1,4 +1,4 @@
-package airport;
+package src;
 
 //The Airspace surrounding the Airport
 simple Airspace
@@ -15,15 +15,15 @@ simple Airspace
 
         //1) Airplanes' Holding Queue Size
         @signal[HoldingQueueSize](type="long");
-        @statistic[HoldingQueueSize](source="HoldingQueueSize"; record=vector; );
+        @statistic[HoldingQueueSize](source="HoldingQueueSize"; record=count, min, max, mean, histogram; title = "Holding Queue Size");
 
         //2) Airplanes' Holding Queue Waiting Time    
         @signal[HoldingQueueWaitingTime](type="double");
-        @statistic[HoldingQueueWaitingTime](source="HoldingQueueWaitingTime"; record=vector; );
+        @statistic[HoldingQueueWaitingTime](source="HoldingQueueWaitingTime"; record=count, min, max, mean, histogram; title = "Holding Queue Waiting Time");
 
         //3) Airport System Response Time
         @signal[AirportResponseTime](type="double");
-        @statistic[AirportResponseTime](source="AirportResponseTime"; record=vector; );
+        @statistic[AirportResponseTime](source="AirportResponseTime"; record=count, min, max, mean, histogram; title = "Airport Response Time");
 
         @display("i=misc/cloud");
     gates:

@@ -1,11 +1,11 @@
-../out/gcc-release/src/ParkingArea.o: ParkingArea.cc Airplane_m.h \
- /home/rickydenton/omnetpp-5.5.1/include/omnetpp.h ControlTower.h \
- ParkingArea.h
+out/gcc-release//src/ParkingArea.o: src/ParkingArea.cc src/Airplane_m.h \
+ /home/luigi/Downloads/omnetpp-5.5.1/include/omnetpp.h src/ControlTower.h \
+ src/ParkingArea.h
 
-Airplane_m.h:
+src/Airplane_m.h:
 
-/home/rickydenton/omnetpp-5.5.1/include/omnetpp.h:
+/home/luigi/Downloads/omnetpp-5.5.1/include/omnetpp.h:
 
-ControlTower.h:
+src/ControlTower.h:
 
-ParkingArea.h:
+src/ParkingArea.h:

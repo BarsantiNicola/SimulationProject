@@ -1,5 +1,5 @@
 //
-// Generated file, do not edit! Created by nedtool 5.5 from Airplane.msg.
+// Generated file, do not edit! Created by nedtool 5.5 from src/Airplane.msg.
 //
 
 // Disable warnings about unused variables, empty switch stmts, etc:

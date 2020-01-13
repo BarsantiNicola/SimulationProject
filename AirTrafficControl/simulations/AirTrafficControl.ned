@@ -1,7 +1,7 @@
-package airport.simulations;
+package simulations;
 
-import airport.Airspace;
-import airport.Airport;
+import src.Airspace;
+import src.Airport;
 
 //The Airport System
 network AirTrafficControl
