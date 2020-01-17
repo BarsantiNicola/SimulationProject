@@ -5,8 +5,6 @@
 
 class ControlTower;               //Forward declaration of the ControlTower class
 
-#define TOTAL_AIRPLANES 1000000   //Total number of airplanes that will arrive in the system (= sample size)
-
 using namespace omnetpp;
 
 namespace airport
@@ -20,6 +18,7 @@ namespace airport
      bool isLandingTimeRandom;
      double interArrivalTime;
      double landingTime;
+     int totalSamples;
 
      /*--------Statistics-related Signals----------*/
      simsignal_t holdingQueueSize;
@@ -27,7 +26,7 @@ namespace airport
      simsignal_t airportResponseTime;
 
      /*------------------Other--------------------*/
-     unsigned long int departedPlanes; //Number of airplanes that departed from airport (used to stop the simulation after TOTAL_AIRPLANES samples have been collected)
+     int departedPlanes;               //Number of airplanes that departed from airport (used to stop the simulation after TOTAL_AIRPLANES samples have been collected)
      double nextArrival;               //Arrival time of the next airplane
      double nextLandingTime;           //Landing time of the next airplane
      cQueue* holdingQueue;             //FIFO queue of airplanes waiting for landing

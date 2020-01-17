@@ -2,7 +2,6 @@
 #include "ControlTower.h"   //Required to avoid "Invalid use of incomplete type" when dereferencing the "controlTower" pointer
 #include "Airspace.h"
 
-
 namespace airport
 {
  Define_Module(Airspace);
@@ -15,6 +14,7 @@ namespace airport
    isLandingTimeRandom = par("isLandingTimeRandom").boolValue();
    interArrivalTime = par("interArrivalTime").doubleValue();
    landingTime = par("landingTime").doubleValue();
+   totalSamples = par("totalSamples").intValue();
 
    //Statistics-related Signals Initializations
    holdingQueueSize = registerSignal("HoldingQueueSize");
@@ -37,7 +37,6 @@ namespace airport
 
    //Schedule the first event. i.e. the first airplane's arrival
    Airplane* firstPlane = new Airplane();
-   firstPlane->setAirplaneID(1);                                                                                                              //Set the first airplane's ID
    if(isInterArrivalTimeRandom)                                                                                                               //Compute the first airplane's arrival time, depending whether it is constant or random
     nextArrival = exponential(interArrivalTime,0);
    else
@@ -64,7 +63,7 @@ namespace airport
       emit(holdingQueueSize,(long)holdingQueue->getLength());                    //Collect a sample of the holding queue length
       if(controlTower->notify())                                                 //Notify the Control Tower of the arrival, and if it reports that the plane is available for an immediate landing
        {
-        EV<<"[Airspace]: The airplane N°"<<((Airplane*)airplane)->getAirplaneID()<<" has arrived, and the control tower reports that is immediately available for landing"<<endl;
+        EV<<"[Airspace]: A new airplane has arrived, and the control tower reports that is immediately available for landing"<<endl;
         emit(holdingQueueWaitingTime,0.0);                                       //Collect a sample of the departing queue waiting time (in this particular case, 0)
         if(isLandingTimeRandom)                                                  //Compute the airplane's landing time, depending whether it is constant or random
          nextLandingTime = exponential(landingTime,1);
@@ -74,12 +73,11 @@ namespace airport
        }
       else                                                                       //Otherwise, if the plane is not available for an immediate landing
        {
-        EV<<"[Airspace]: The airplane N°"<<((Airplane*)airplane)->getAirplaneID()<<" has arrived, and has been enqueued for landing"<<endl;
+        EV<<"[Airspace]: A new airplane has arrived, and has been enqueued for landing"<<endl;
         ((Airplane*)airplane)->setQueueArrivalTime(simTime().dbl());             //Set the airplane's arrival time into the holding queue
         holdingQueue->insert(airplane);                                          //Insert the airplane into the holding queue
        }
       Airplane* nextPlane = new Airplane();                                      //Create the next airplane
-      nextPlane->setAirplaneID(((Airplane*)airplane)->getAirplaneID()+1);        //Set the ID of the next airplane
       if(isInterArrivalTimeRandom)                                               //Compute the next airplane's arrival time, depending whether it is constant or random
        nextArrival = exponential(interArrivalTime,0);
       else
@@ -88,10 +86,10 @@ namespace airport
      }
     else                                                                         //Otherwise an airplane has finished its takeoff from the Parking Area
      {
-      EV<<"[Airspace]: The airplane N°"<<((Airplane*)airplane)->getAirplaneID()<<" has taken off and has left the system"<<endl;
+      EV<<"[Airspace]: An airplane has taken off and has left the system"<<endl;
       emit(airportResponseTime,simTime().dbl()-airplane->getTimestamp().dbl());  //Collect a sample of the airport system response time
       delete(airplane);                                                          //Remove the airplane from the system
-      if(++departedPlanes < TOTAL_AIRPLANES)                                     //If less than TOTAL_AIRPLANES have departed from the system
+      if(++departedPlanes < totalSamples)                                        //If less than "totalSamples" airplanes have departed the system, i.e. less that "totalSamples" samples have been collected
        controlTower->completed();                                                //Inform the Control Tower that the airplane's takeoff is complete
       else                                                                       //Otherwise, end the simulation
        endSimulation();
@@ -114,7 +112,7 @@ namespace airport
    {
     Enter_Method("go()");                                                           //Denotes that this member function is callable from other modules (in our case, the Control Tower)
     Airplane* airplane = (Airplane*)holdingQueue->pop();                            //Extract the first airplane from the holding queue (which is always the oldest)
-    EV<<"[Airspace]: The Control Tower notifies that the airplane N°"<<airplane->getAirplaneID()<<" is allowed to land"<<endl;
+    EV<<"[Airspace]: The Control Tower notifies that the next airplane is allowed to land"<<endl;
     emit(holdingQueueWaitingTime,simTime().dbl()-airplane->getQueueArrivalTime());  //Collect a sample of the holding queue waiting time
     if(isLandingTimeRandom)                                                         //Compute the airplane's landing time, depending whether it is constant or random
      nextLandingTime = exponential(landingTime,1);

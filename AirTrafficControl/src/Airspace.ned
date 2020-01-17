@@ -10,6 +10,7 @@ simple Airspace
         bool isLandingTimeRandom = default(false);
         double interArrivalTime = default(10);
         double landingTime = default(5);
+        int totalSamples = default(1000000);
 
   //----------------------------Statistics-related Parameters----------------------------  
 

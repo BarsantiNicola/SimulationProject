@@ -25,7 +25,6 @@ namespace airport {
  * //An extension of the cMessage class representing an airplane
  * message Airplane
  * {
- *     long airplaneID;             //The Airplane ID (Note that the "messageID" field of the "cMessage" class could not be used due to internal message duplications performed by the simulator)
  *     double queueArrivalTime;     //Initialized when the airplane is inserted into a queue for statistic collection purposes
  * }
  * </pre>
@@ -33,7 +32,6 @@ namespace airport {
 class Airplane : public ::omnetpp::cMessage
 {
   protected:
-    long airplaneID;
     double queueArrivalTime;
 
   private:
@@ -53,8 +51,6 @@ class Airplane : public ::omnetpp::cMessage
     virtual void parsimUnpack(omnetpp::cCommBuffer *b) override;
 
     // field getter/setter methods
-    virtual long getAirplaneID() const;
-    virtual void setAirplaneID(long airplaneID);
     virtual double getQueueArrivalTime() const;
     virtual void setQueueArrivalTime(double queueArrivalTime);
 };
