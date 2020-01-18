@@ -7,9 +7,37 @@ import seaborn as sns
 from scipy.signal._savitzky_golay import * # savgol_filter
 import scipy.stats as stats
 import math
+import random
+import matplotlib.pyplot as plt
+import statsmodels.api as sm 
+import pylab as py 
+import pingouin as pg
 
 # Update the subsequent vector when adding new configuration to omnet.ini
 SIMULATIONS = ['DeterministicRegimeOverloaded']
+def randomColor():
+    r = random.randint(0,255)
+    g = random.randint(0,255)
+    b = random.randint(0,255)
+    rgb = [r, g, b]
+    return rgb
+
+def color(r, g, b):
+    '''
+    minimum = 1
+    maximum = 5
+    rn = ((r - minimum)/(maximum - minimum))
+    gn = ((g - minimum)/(maximum - minimum))
+    bn = ((b - minimum)/(maximum - minimum))
+    '''
+    random.seed(r)
+    rn = random.random()
+    random.seed(g)
+    gn = random.random()
+    random.seed(b)
+    bn = random.random()
+    rgbn = [[rn, gn, bn]]
+    return rgbn
 
 def parse_if_number(s):
     try: return float(s)
@@ -43,6 +71,12 @@ def extractVec(s):
     vectors['max'] = vectors.apply (lambda row: row['vecvalue'].max(), axis=1)
     #vectors['median'] = vectors.apply (lambda row: stats.median(row['vecvalue']), axis=1)
     return vectors
+
+def wide(vectors, name):
+    index = 'iat'
+    columns = ['lt', 'tot', 'pt']
+    a = vectors[vectors['name'] == name].pivot_table(index = index, columns = columns, values = 'Mean')
+    return a
 
 def getVecFileName():
     parent_dir = os.getcwd()
@@ -97,7 +131,49 @@ def addIterationVar(df):
     itervarscol_df = itervarscol_df.rename(columns={'attrvalue': 'iterationvars'})
     df3 = df2.merge(itervarscol_df, left_on='run', right_on='run', how='outer')
     return df3
-    
-    
-    
-    
+
+def barp(vectors):
+    # AGGIUNGERE INTERVALLO DI CONFIDENZA
+    for name in vectors.name.unique():
+        table = vectors[(vectors['name'] == name)][['iat', 'tot', 'lt', 'pt', 'Mean']]
+        '''
+        print(name)
+        print(table)
+        '''
+        s = []
+        for i in range(0, table.index.size):
+            plt.scatter(table.iloc[i][0], table.iloc[i][4], c = color(table.iloc[i][1], table.iloc[i][2], table.iloc[i][3]))
+            s.append('tot= ' + str(table.iloc[i][1]) + ', lt=' +  str(table.iloc[i][2]) + ', pt=' + str(table.iloc[i][3]))
+        plt.legend(pd.Series(s))
+        plt.ylabel(name)
+        plt.xlabel('iat')
+        plt.show()
+
+def fillb(time_series_df):
+    smooth_path = time_series_df.rolling(20).mean()
+    path_deviation = 2 * time_series_df.rolling(20).std()
+    plt.plot(smooth_path, linewidth=2)
+    plt.fill_between(path_deviation.index, (smooth_path-2*path_deviation)[0], (smooth_path+2*path_deviation)[0], color='b', alpha=.1)
+
+def MS(df): # mean and standard deviation for a set of vectors
+    tmp = np.array([])
+    for j in range(0, len(df)):
+        tmp = np.concatenate((tmp, df.iloc[j]))
+    return (np.mean(tmp), np.std(tmp))
+
+def cilineplot(x, y, m, s, con_coef = None): # m = mean, s = standard deviation
+    if con_coef is None or con_coef > 1 or con_coef < 0:
+        con_coef = .95
+    alpha = 1. - con_coef
+    z_critical = stats.norm.ppf(q = con_coef + alpha/2)
+    standard_error = s / math.sqrt(len(x))
+    lower = y - z_critical * standard_error
+    upper = y + z_critical * standard_error
+    plt.plot(x, y, linewidth = 0.5)
+    plt.fill_between(x = x, y1 = lower, y2 = upper, color='b', alpha=.1)
+
+def qqplot(df, dist):
+    if dist == 'erlang':
+        pg.qqplot(df, dist, sparams=(2,), confidence=.95)
+    else:
+        pg.qqplot(df, dist, confidence=.95)
