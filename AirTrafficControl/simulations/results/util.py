@@ -106,9 +106,9 @@ def getVecFileName():
     print('Ended')
 
 def scavetool():
-    os.system('rm -f *.csv')
+    #os.system('rm -f *.csv')
     for sim in SIMULATIONS:
-        os.system('scavetool x ' + sim + '*.sca -o ' + sim + '.csv')
+        os.system('scavetool x ' + sim + '*.vec *.sca -o ' + sim + '.csv')
     #os.system('rm -f *.sca *.out *.vci *.vec')
 
 def CI_bounds(vector, con_coef = None):
