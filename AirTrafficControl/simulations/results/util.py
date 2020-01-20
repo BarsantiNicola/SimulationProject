@@ -177,3 +177,12 @@ def qqplot(df, dist):
         pg.qqplot(df, dist, sparams=(2,), confidence=.95)
     else:
         pg.qqplot(df, dist, confidence=.95)
+
+def correlogram(df, title = None):
+    '''
+    Consult: (Luigi: preferisco questo)
+        https://www.statsmodels.org/stable/generated/statsmodels.graphics.tsaplots.plot_acf.html
+    from statsmodels.graphics import tsaplots
+    fig = tsaplots.plot_pacf(co2_levels['co2'], lags=40)
+    '''
+    pd.plotting.autocorrelation_plot(df)
