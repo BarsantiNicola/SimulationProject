@@ -14,7 +14,7 @@ import pylab as py
 import pingouin as pg
 
 # Update the subsequent vector when adding new configuration to omnet.ini
-SIMULATIONS = ['DeterministicRegimeOverloaded']
+SIM = 'ExponentialRegimeBalanced'
 def randomColor():
     r = random.randint(0,255)
     g = random.randint(0,255)
@@ -186,3 +186,98 @@ def correlogram(df, title = None):
     fig = tsaplots.plot_pacf(co2_levels['co2'], lags=40)
     '''
     pd.plotting.autocorrelation_plot(df)
+
+def discreteQQ(x_sample):
+    
+    p_test = np.array([])
+    for i in range(0, 1001):
+        p_test = np.append(p_test, i/1000)
+        i = i + 1
+    
+    x_sample = np.sort(x_sample)
+    x_theor = stats.geom.rvs(.5, size=len(x_sample))
+    ecdf_sample = np.arange(1, len(x_sample) + 1)/(len(x_sample)+1)
+    
+    x_theor = stats.geom.ppf(ecdf_sample, p=0.5)
+    
+    for p in p_test:
+        plt.scatter(np.quantile(x_theor, p), np.quantile(x_sample, p), c = 'blue')
+    
+    plt.xlabel('Theoretical quantiles')
+    plt.ylabel('Sample quantiles')
+    plt.show()
+
+def plotDF(df):
+    if os.path.isdir('./' + SIM) is False:
+        os.mkdir('./' + SIM)
+    if os.path.isdir('./' + SIM + '/plots') is False:
+        os.mkdir('./' + SIM + '/plots')
+    os.system('rm -rf ./' + SIM + '/plots/*')
+    for itervars in df.iterationvars.unique():
+        vectors = df[df.iterationvars == itervars][['iterationvars', 'name', 'vectime', 'vecvalue']]
+        for name in vectors.name.unique():
+            tmp = vectors[vectors.name == name]
+            l = len(tmp)
+            for i in range(l):
+                plt.plot(tmp.iloc[i]['vectime'], tmp.iloc[i]['vecvalue'], marker = '.', markersize = 0.01)             
+                plt.title(name.split(':')[0] + " " + itervars + " (iter = " + str(i) + ")")
+                plt.savefig(name.split(':')[0] + " " + itervars + " (iter = " + str(i) + ").png")
+                plt.clf()
+    os.system('cp *.png ./' + SIM + '/plots')
+    os.system('rm -f *.png')
+
+def pooledVariance(count, std):
+    '''
+    count -> count vector
+    std -> standard deviation vector
+    Combined variance: when variances coming from different
+    sample sets have to be combined  this formula is used.
+    (Actually there are two versions; what follows is subject
+    to "Bessel's correction")
+    '''    
+    return sum((x-1) * y * y for x, y in zip(count, std)) / (sum(count) - len(count)) 
+
+def scatterDF(df):
+    print("ciao")
+
+def prova(tmp):
+    #funzioni di prova plotDF
+    con_coef = .99
+    alpha = 1. - con_coef
+    z = stats.norm.ppf(q = con_coef + alpha/2)*np.std(tmp.iloc[0]['vecvalue'])/math.sqrt(len(tmp.iloc[0]['vecvalue']))
+    print(z)
+    plt.plot(tmp.iloc[0]['vectime'], tmp.iloc[0]['vecvalue'])
+    plt.fill_between(tmp.iloc[0]['vectime'], tmp.iloc[0]['vecvalue'] - z, tmp.iloc[0]['vecvalue'] + z, color='b', alpha=.1)
+
+    plt.title("prova " + str(tmp.iloc[0].iterationvars))
+    
+def prova1(vectors):
+    #funzione di prova per scatterDF
+    vectors = vectors.groupby('iterationvars').agg(
+        cmean = pd.NamedAgg(column = 'Mean', aggfunc = lambda x: sum(x)/len(x)))
+    return vectors
+
+def mean(arr): 
+    n = len(arr)
+    sum = 0
+    for i in range(n): 
+        sum = sum + arr[i]
+    return sum/n
+
+def sd(arr):
+    sum = 0
+    n = len(arr)
+    m = mean(arr)
+    for i in range(n): 
+        sum = sum + (arr[i] - m)**2
+    return sum / n
+
+def combinedVariance(means, sds, counts): 
+    # ATTENTION: sds must be variancem not standard deviation
+    # https://www.youtube.com/watch?v=wUTBPLO4Xmc
+    
+    combinedMean = sum(x * y for x, y in zip(means, counts)) /sum(counts)
+
+    return sum(z * (y + (x - combinedMean)**2) for x, y, z in zip(means, sds, counts)) /sum(counts)
+    
+
