@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import statsmodels.api as sm 
 import pylab as py 
 import pingouin as pg
+from statsmodels.graphics import tsaplots
 
 # Update the subsequent vector when adding new configuration to omnet.ini
 SIM = 'ExponentialRegimeBalanced'
@@ -172,40 +173,32 @@ def cilineplot(x, y, m, s, con_coef = None): # m = mean, s = standard deviation
     plt.plot(x, y, linewidth = 0.5)
     plt.fill_between(x = x, y1 = lower, y2 = upper, color='b', alpha=.1)
 
-def qqplot(df, dist):
+def qqplot(df, dist = 'expon'):
     if dist == 'erlang':
         pg.qqplot(df, dist, sparams=(2,), confidence=.95)
     else:
         pg.qqplot(df, dist, confidence=.95)
 
-def correlogram(df, title = None):
+def correlogram(df, title = None, lags = 10):
     '''
     Consult: (Luigi: preferisco questo)
         https://www.statsmodels.org/stable/generated/statsmodels.graphics.tsaplots.plot_acf.html
-    from statsmodels.graphics import tsaplots
-    fig = tsaplots.plot_pacf(co2_levels['co2'], lags=40)
+    and (for lag plot)
+    https://github.com/2wavetech/How-to-Check-if-Time-Series-Data-is-Stationary-with-Python
+    
     '''
-    pd.plotting.autocorrelation_plot(df)
+    fig = tsaplots.plot_acf(df, lags=lags)
+    #pd.plotting.autocorrelation_plot(df, lags = lags)
 
-def discreteQQ(x_sample):
-    
-    p_test = np.array([])
-    for i in range(0, 1001):
-        p_test = np.append(p_test, i/1000)
-        i = i + 1
-    
-    x_sample = np.sort(x_sample)
-    x_theor = stats.geom.rvs(.5, size=len(x_sample))
+def discreteQQplot(x_sample, p=0.5):
+    """ Plot the Q-Q plot of the geometric distribution """
     ecdf_sample = np.arange(1, len(x_sample) + 1)/(len(x_sample)+1)
-    
-    x_theor = stats.geom.ppf(ecdf_sample, p=0.5)
-    
-    for p in p_test:
-        plt.scatter(np.quantile(x_theor, p), np.quantile(x_sample, p), c = 'blue')
-    
+    x_theor = stats.geom.ppf(ecdf_sample, p=p)
+    plt.scatter(x_theor, x_theor, label='theor-theor quantiles')
+    plt.scatter(x_theor, x_sample, label='theor-sample quantiles', marker = '.')
     plt.xlabel('Theoretical quantiles')
     plt.ylabel('Sample quantiles')
-    plt.show()
+    plt.legend()
 
 def plotDF(df):
     if os.path.isdir('./' + SIM) is False:
@@ -225,17 +218,6 @@ def plotDF(df):
                 plt.clf()
     os.system('cp *.png ./' + SIM + '/plots')
     os.system('rm -f *.png')
-
-def pooledVariance(count, std):
-    '''
-    count -> count vector
-    std -> standard deviation vector
-    Combined variance: when variances coming from different
-    sample sets have to be combined  this formula is used.
-    (Actually there are two versions; what follows is subject
-    to "Bessel's correction")
-    '''    
-    return sum((x-1) * y * y for x, y in zip(count, std)) / (sum(count) - len(count)) 
 
 def scatterDF(df):
     print("ciao")
