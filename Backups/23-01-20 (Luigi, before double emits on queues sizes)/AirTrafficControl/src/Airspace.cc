@@ -114,7 +114,6 @@ namespace airport
     Airplane* airplane = (Airplane*)holdingQueue->pop();                            //Extract the first airplane from the holding queue (which is always the oldest)
     EV<<"[Airspace]: The Control Tower notifies that the next airplane is allowed to land"<<endl;
     emit(holdingQueueWaitingTime,simTime().dbl()-airplane->getQueueArrivalTime());  //Collect a sample of the holding queue waiting time
-    emit(holdingQueueSize,(long)holdingQueue->getLength());                         //Collect a sample of the holding queue length TODO: Unnecessary?
     if(isLandingTimeRandom)                                                         //Compute the airplane's landing time, depending whether it is constant or random
      nextLandingTime = exponential(landingTime,1);
     else

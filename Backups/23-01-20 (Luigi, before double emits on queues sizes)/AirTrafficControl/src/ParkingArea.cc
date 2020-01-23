@@ -100,7 +100,6 @@ namespace airport
    Airplane* airplane = (Airplane*)departQueue->pop();                             //Extract the first airplane from the departing queue (which is always the oldest)
    EV<<"[ParkingArea]: The Control Tower notifies that the next airplane is allowed to takeoff"<<endl;
    emit(departQueueWaitingTime,simTime().dbl()-airplane->getQueueArrivalTime());   //Collect a sample of the departing queue waiting time
-   emit(departQueueSize,(long)departQueue->getLength());                           //Collect a sample of the departing queue length TODO: Unnecessary?
    if(isTakeoffTimeRandom)                                                         //Compute the airplane's takeoff time, depending whether it is constant or random
     nextTakeoffTime = exponential(takeoffTime,1);
    else
