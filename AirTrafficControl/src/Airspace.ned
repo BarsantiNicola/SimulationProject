@@ -4,6 +4,10 @@ package src;
 simple Airspace
 {
     parameters:
+        
+        // --------------------------------- Warm-up TIme ------------------------------------
+        double warmup;
+        double scaling;
 
         //----------------------------------Input Parameters----------------------------------   
         bool isInterArrivalTimeRandom = default(false);

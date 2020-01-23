@@ -9,6 +9,12 @@ namespace airport
  /* Module initializing function */
  void Airspace::initialize()
   {
+
+   // Warmup time
+   double warmup = par("warmup");
+   double scaling = par("scaling");
+   getSimulation()->setWarmupPeriod(scaling * warmup);
+
    //Input Parameters Initializations
    isInterArrivalTimeRandom = par("isInterArrivalTimeRandom").boolValue();
    isLandingTimeRandom = par("isLandingTimeRandom").boolValue();
