@@ -65,6 +65,7 @@ def extractVec(s):
     vectors = vectors.drop(columns = ['run', 'type', 'module', 'attrname', 'attrvalue', 'value'])
     # Now, some statistics are computed and appended to each tuple. If some of them will not
     # be used cancel or comment the proper line. If other are need, add a new line accordingly
+    vectors['iterationvars'] = vectors.apply (lambda row: row['iterationvars'].split(', $0')[0], axis=1)
     vectors['Mean'] = vectors.apply (lambda row: row['vecvalue'].mean(), axis=1)
     vectors['StDev'] = vectors.apply (lambda row: row['vecvalue'].std(), axis=1)
     vectors['count'] = vectors.apply (lambda row: row['vecvalue'].size, axis=1)
@@ -219,24 +220,56 @@ def plotDF(df):
     os.system('cp *.png ./' + SIM + '/plots')
     os.system('rm -f *.png')
 
-def scatterDF(df):
-    print("ciao")
-
-def prova(tmp):
+def prova():
     #funzioni di prova plotDF
-    con_coef = .99
-    alpha = 1. - con_coef
-    z = stats.norm.ppf(q = con_coef + alpha/2)*np.std(tmp.iloc[0]['vecvalue'])/math.sqrt(len(tmp.iloc[0]['vecvalue']))
-    print(z)
-    plt.plot(tmp.iloc[0]['vectime'], tmp.iloc[0]['vecvalue'])
-    plt.fill_between(tmp.iloc[0]['vectime'], tmp.iloc[0]['vecvalue'] - z, tmp.iloc[0]['vecvalue'] + z, color='b', alpha=.1)
-
-    plt.title("prova " + str(tmp.iloc[0].iterationvars))
+    plt.scatter(3, 5)
+    plt.errorbar(3, 5, yerr = .5)
+    plt.show()
     
-def prova1(vectors):
-    #funzione di prova per scatterDF
-    vectors = vectors.groupby('iterationvars').agg(
-        cmean = pd.NamedAgg(column = 'Mean', aggfunc = lambda x: sum(x)/len(x)))
+def scatterDF(df, con_coef = None):
+    if con_coef is None or con_coef > 1 or con_coef < 0:
+        con_coef = .9999
+        
+    alpha = 1. - con_coef
+    
+
+    vectors = df.groupby(['iat', 'lt', 'tot', 'pt', 'name']).apply(lambda x: pd.Series({
+          'cmean'       : (x['Mean']*x['count']).sum()/x['count'].sum(),
+          'ccount'       : x['count'].sum(),
+          'cvar' :  (x['count'] * ( x['StDev']**2 + ( x['Mean'] - ( x['Mean'] * x['count'] ).sum()/x['count'].sum())**2)).sum()/x['count'].sum()
+      })
+    )
+    vectors = vectors.reset_index()
+    
+    vectors['upper'] = vectors.apply (lambda row: row.cmean + stats.norm.ppf(q = con_coef + alpha/2)*math.sqrt(row.cvar/row.ccount), axis=1)
+    vectors['lower'] = vectors.apply (lambda row: row.cmean - stats.norm.ppf(q = con_coef + alpha/2)*math.sqrt(row.cvar/row.ccount), axis=1)
+    vectors['error'] = vectors.apply (lambda row: row.upper - row.lower, axis = 1)
+    
+    if os.path.isdir('./' + SIM) is False:
+        os.mkdir('./' + SIM)
+    if os.path.isdir('./' + SIM + '/scatters') is False:
+        os.mkdir('./' + SIM + '/scatters')
+    os.system('rm -rf ./' + SIM + '/scatters/*')
+    
+    for name in vectors.name.unique():
+        s = []
+        for row in vectors[vectors.name == name].itertuples():
+            c = color(row.lt, row.tot, row.pt)
+            plt.scatter(row.iat, row.cmean, c = c)
+            plt.errorbar(row.iat, row.cmean, yerr = (row.upper - row.lower), ecolor = c)
+            s.append('tot= ' + str(row.tot) + ', lt=' +  str(row.lt) + ', pt=' + str(row.pt))
+        plt.legend(pd.Series(s))
+        plt.title(name.split(':')[0])
+        plt.savefig(name.split(':')[0] + ".png")
+        plt.xlabel('iat')
+        plt.show()
+        plt.clf()
+    
+    os.system('cp *.png ./' + SIM + '/scatters')
+    os.system('rm -f *.png')
+    
+    vectors.to_csv('./' + SIM + '/scatters/recap.csv')
+    
     return vectors
 
 def mean(arr): 
@@ -255,11 +288,10 @@ def sd(arr):
     return sum / n
 
 def combinedVariance(means, sds, counts): 
-    # ATTENTION: sds must be variancem not standard deviation
+    # ATTENTION: sds must be variance and not standard deviation
     # https://www.youtube.com/watch?v=wUTBPLO4Xmc
     
     combinedMean = sum(x * y for x, y in zip(means, counts)) /sum(counts)
 
     return sum(z * (y + (x - combinedMean)**2) for x, y, z in zip(means, sds, counts)) /sum(counts)
     
-
