@@ -13,6 +13,9 @@ import statsmodels.api as sm
 import pylab as py 
 import pingouin as pg
 from statsmodels.graphics import tsaplots
+import pymc3
+import gc
+from statsmodels.distributions.empirical_distribution import ECDF
 
 # Update the subsequent vector when adding new configuration to omnet.ini
 SIM = 'ExponentialRegimeBalanced'
@@ -48,12 +51,14 @@ def parse_ndarray(s):
     return np.fromstring(s, sep=' ') if s else None
 
 def extractVec(s):
+    gc.enable()
     vectors = pd.read_csv(s, converters = {
     'attrvalue': parse_if_number,
     'binedges': parse_ndarray,
     'binvalues': parse_ndarray,
     'vectime': parse_ndarray,
     'vecvalue': parse_ndarray})
+    gc.collect()
     itervars_df = vectors.loc[vectors.type=='itervar', ['run', 'attrname', 'attrvalue']]
     itervarspivot_df = itervars_df.pivot(index='run', columns='attrname', values='attrvalue')
     vectors2 = vectors.merge(itervarspivot_df, left_on='run', right_index=True, how='outer')
@@ -61,6 +66,7 @@ def extractVec(s):
     itervarscol_df = itervarscol_df.rename(columns={'attrvalue': 'iterationvars'})
     vectors3 = vectors2.merge(itervarscol_df, left_on='run', right_on='run', how='outer')
     vectors = vectors3[vectors3.type=='vector']
+    gc.collect()
     # Now some columns are about to be dropped because they won't be used. If needed, update subsequent line of code accordingly
     vectors = vectors.drop(columns = ['run', 'type', 'module', 'attrname', 'attrvalue', 'value'])
     # Now, some statistics are computed and appended to each tuple. If some of them will not
@@ -69,6 +75,7 @@ def extractVec(s):
     vectors['Mean'] = vectors.apply (lambda row: row['vecvalue'].mean(), axis=1)
     vectors['StDev'] = vectors.apply (lambda row: row['vecvalue'].std(), axis=1)
     vectors['count'] = vectors.apply (lambda row: row['vecvalue'].size, axis=1)
+    vectors['neff'] = vectors.apply (lambda row: pymc3.ess(np.array(row['vecvalue'])), axis=1)
     vectors['min'] = vectors.apply (lambda row: row['vecvalue'].min(), axis=1)
     vectors['max'] = vectors.apply (lambda row: row['vecvalue'].max(), axis=1)
     #vectors['median'] = vectors.apply (lambda row: stats.median(row['vecvalue']), axis=1)
@@ -201,48 +208,51 @@ def discreteQQplot(x_sample, p=0.5):
     plt.ylabel('Sample quantiles')
     plt.legend()
 
-def plotDF(df):
+def plotDF(df, con_coef = None):
+    if con_coef is None or con_coef > 1 or con_coef < 0:
+        con_coef = .95
+    alpha = 1. - con_coef
+    z_critical = stats.norm.ppf(q = con_coef + alpha/2)
     if os.path.isdir('./' + SIM) is False:
         os.mkdir('./' + SIM)
     if os.path.isdir('./' + SIM + '/plots') is False:
         os.mkdir('./' + SIM + '/plots')
     os.system('rm -rf ./' + SIM + '/plots/*')
     for itervars in df.iterationvars.unique():
-        vectors = df[df.iterationvars == itervars][['iterationvars', 'name', 'vectime', 'vecvalue']]
+        vectors = df[df.iterationvars == itervars][['iterationvars', 'name', 'vectime', 'vecvalue', 'StDev', 'neff']]
         for name in vectors.name.unique():
             tmp = vectors[vectors.name == name]
             l = len(tmp)
             for i in range(l):
-                plt.plot(tmp.iloc[i]['vectime'], tmp.iloc[i]['vecvalue'], marker = '.', markersize = 0.01)             
+                plt.plot(tmp.iloc[i]['vectime'], tmp.iloc[i]['vecvalue'], marker = '.', markersize = 0.01)
+                errBand = z_critical*tmp.iloc[i]['StDev']/math.sqrt(tmp.iloc[i]['neff'])
+                lower = tmp.iloc[i]['vecvalue'] - errBand
+                upper = tmp.iloc[i]['vecvalue'] + errBand
+                plt.fill_between(x = tmp.iloc[i]['vectime'], y1 = lower, y2 = upper, color='b', alpha=.1)
                 plt.title(name.split(':')[0] + " " + itervars + " (iter = " + str(i) + ")")
                 plt.savefig(name.split(':')[0] + " " + itervars + " (iter = " + str(i) + ").png")
+                #plt.show()
                 plt.clf()
     os.system('cp *.png ./' + SIM + '/plots')
     os.system('rm -f *.png')
-
-def prova():
-    #funzioni di prova plotDF
-    plt.scatter(3, 5)
-    plt.errorbar(3, 5, yerr = .5)
-    plt.show()
     
 def scatterDF(df, con_coef = None):
     if con_coef is None or con_coef > 1 or con_coef < 0:
-        con_coef = .9999
+        con_coef = .95
         
     alpha = 1. - con_coef
     
 
     vectors = df.groupby(['iat', 'lt', 'tot', 'pt', 'name']).apply(lambda x: pd.Series({
-          'cmean'       : (x['Mean']*x['count']).sum()/x['count'].sum(),
-          'ccount'       : x['count'].sum(),
-          'cvar' :  (x['count'] * ( x['StDev']**2 + ( x['Mean'] - ( x['Mean'] * x['count'] ).sum()/x['count'].sum())**2)).sum()/x['count'].sum()
+          'cmean'       : (x['Mean']*x['neff']).sum()/x['neff'].sum(),
+          'cEffCount'       : x['neff'].sum(),
+          'cvar' :  (x['neff'] * ( x['StDev']**2 + ( x['Mean'] - ( x['Mean'] * x['neff'] ).sum()/x['neff'].sum())**2)).sum()/x['neff'].sum()
       })
     )
     vectors = vectors.reset_index()
     
-    vectors['upper'] = vectors.apply (lambda row: row.cmean + stats.norm.ppf(q = con_coef + alpha/2)*math.sqrt(row.cvar/row.ccount), axis=1)
-    vectors['lower'] = vectors.apply (lambda row: row.cmean - stats.norm.ppf(q = con_coef + alpha/2)*math.sqrt(row.cvar/row.ccount), axis=1)
+    vectors['upper'] = vectors.apply (lambda row: row.cmean + stats.norm.ppf(q = con_coef + alpha/2)*math.sqrt(row.cvar/row.cEffCount), axis=1)
+    vectors['lower'] = vectors.apply (lambda row: row.cmean - stats.norm.ppf(q = con_coef + alpha/2)*math.sqrt(row.cvar/row.cEffCount), axis=1)
     vectors['error'] = vectors.apply (lambda row: row.upper - row.lower, axis = 1)
     
     if os.path.isdir('./' + SIM) is False:
@@ -294,4 +304,34 @@ def combinedVariance(means, sds, counts):
     combinedMean = sum(x * y for x, y in zip(means, counts)) /sum(counts)
 
     return sum(z * (y + (x - combinedMean)**2) for x, y, z in zip(means, sds, counts)) /sum(counts)
+    
+def lorenz(df):
+    if os.path.isdir('./' + SIM) is False:
+        os.mkdir('./' + SIM)
+    if os.path.isdir('./' + SIM + '/lorenz') is False:
+        os.mkdir('./' + SIM + '/lorenz')
+    os.system('rm -rf ./' + SIM + '/lorenz/*')
+    
+    for itervars in df.iterationvars.unique():
+        vectors = df[df.iterationvars == itervars][['iterationvars', 'name', 'vecvalue']]
+        for name in vectors.name.unique():
+            tmp = vectors[vectors.name == name]
+            l = len(tmp)
+            s = []
+            for i in range(l):
+                arr = tmp.iloc[i]['vecvalue']
+                m = arr.mean()
+                lcg = (abs(arr - m)).sum()/(2*arr.size*m)
+                scaled_prefix_sum = arr.cumsum() / arr.sum()
+                lc = np.insert(scaled_prefix_sum, 0, 0)
+                plt.plot(np.linspace(0.0, 1.0, lc.size), lc)
+                s.append('iter = ' + str(i) + ', lcg = ' + str('%.4f'%lcg)) # to redce precision
+            plt.legend(pd.Series(s))
+            plt.plot([0, 1], [0, 1], color = 'k')
+            plt.title(name.split(':')[0] + " " + itervars)
+            #plt.show()
+            plt.savefig(name.split(':')[0] + " " + itervars + ".png")
+            plt.clf()
+    os.system('cp *.png ./' + SIM + '/lorenz')
+    os.system('rm -f *.png')
     
