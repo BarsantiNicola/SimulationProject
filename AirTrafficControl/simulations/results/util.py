@@ -306,6 +306,7 @@ def combinedVariance(means, sds, counts):
     return sum(z * (y + (x - combinedMean)**2) for x, y, z in zip(means, sds, counts)) /sum(counts)
     
 def lorenz(df):
+    
     if os.path.isdir('./' + SIM) is False:
         os.mkdir('./' + SIM)
     if os.path.isdir('./' + SIM + '/lorenz') is False:
