@@ -1,0 +1,24 @@
+Date tre RVs esponenziali con rate a,b,c (e quindi con valori medi 1/a, 1/b e 1/c), queste sono le espressioni da 
+usare su wolfram alpha per il calcolo della CDF, che variano a seconda che alcuni dei rate siano uguali o meno:
+
+Tutte diverse (a != b != c)
+=============
+∫(L^-1(L(A)*L(B)*L(C))) = ∫a b c (-e^(-b t)/((a - b) (b - c)) + e^(-a t)/((a - b) (a - c)) - e^(-c t)/((a - c) (c - b)))dt
+
+2 Uguali (a = c != b)
+========
+∫(L^-1(L(A)^2*L(B))) = ∫a^2 b ((t e^(-a t))/(b - a) - e^(-a t)/(a - b)^2 + e^(-b t)/(a - b)^2)dt
+
+All Equal (a = b = c) 
+=========
+∫(L^-1(L(A)^3)) = ∫1/2 a^3 t^2 e^(-a t)dt
+
+Dove bisogna sostituire nelle espressioni i valori dei rate a,b,c, altrimenti Wolfram si rifuta di calcolare.
+
+---------------------------------------------------------------------------------------------------------------------
+
+Alcuni risultati per quanto riguarda il calcolo del warm-up time T>=1/a+1/b+1/c al 99% di probabilità:
+
+- a = 1/10, b = 2/10, c = 3/10 ==> T = 57  (T = 3.109(1/a + 1/b + 1/c))
+- a = c = 1/10, b = 2/10       ==> T = 45  (T = 1.8(1/a + 1/b + 1/c))
+- a = b = c = 1/10             ==> T = 54  (T = 1.8(1/a + 1/b + 1/c))
