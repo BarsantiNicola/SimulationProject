@@ -49,7 +49,6 @@ namespace airport
   {
    if(airplane->isSelfMessage())                                              //Receiving a self-message means that an airplane has expired its parking time and it's ready for takeoff
     {
-    //  --numParked;                                                             //Decrease the number of parked airplanes
      emit(parkedPlanes,--numParked);                                            //Collect a sample of the number of parked planes
      if(controlTower->notify())                                               //Notify the Control Tower of the arrival, and if it reports that the plane is available for an immediate takeoff
       {
@@ -73,7 +72,6 @@ namespace airport
    else                                                                       //Otherwise an airplane has finished landing from the Airspace
     {
      EV<<"[ParkingArea]: An airplane has finished landing, and it's parking"<<endl;
-   //  ++numParked;                                                             //Increase the number of parked airplanes
      emit(parkedPlanes,++numParked);                                            //Collect a sample of the number of parked planes
      if(isParkingTimeRandom)                                                  //Compute the airplane's parking time, depending whether it is constant or random
       nextParkingTime = exponential(parkingTime,0);
