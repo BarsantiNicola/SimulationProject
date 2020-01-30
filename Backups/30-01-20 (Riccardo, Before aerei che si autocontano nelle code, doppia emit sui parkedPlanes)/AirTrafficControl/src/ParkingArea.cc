@@ -49,12 +49,11 @@ namespace airport
   {
    if(airplane->isSelfMessage())                                              //Receiving a self-message means that an airplane has expired its parking time and it's ready for takeoff
     {
-    //  --numParked;                                                             //Decrease the number of parked airplanes
-     emit(parkedPlanes,--numParked);                                            //Collect a sample of the number of parked planes
+     --numParked;                                                             //Decrease the number of parked airplanes
+     emit(departQueueSize,(long)departQueue->getLength());                    //Collect a sample of the departing queue length
      if(controlTower->notify())                                               //Notify the Control Tower of the arrival, and if it reports that the plane is available for an immediate takeoff
       {
        EV<<"[ParkingArea]: An airplane has finished parking, and the control tower reports that is immediately available for takeoff"<<endl;
-       emit(departQueueSize,0);                                               //Collect a sample of the departing queue length (in this particular case, 0)
        emit(departQueueWaitingTime,0.0);                                      //Collect a sample of the departing queue waiting time (in this particular case, 0)
        if(isTakeoffTimeRandom)                                                //Compute the airplane's takeoff time, depending whether it is constant or random
         nextTakeoffTime = exponential(takeoffTime,1);
@@ -67,14 +66,13 @@ namespace airport
        EV<<"[ParkingArea]: An airplane has finished parking, and has been enqueued for takeoff"<<endl;
        ((Airplane*)airplane)->setQueueArrivalTime(simTime().dbl());           //Set the airplane's arrival time into the departing queue
        departQueue->insert(airplane);                                         //Insert the airplane into the departing queue
-       emit(departQueueSize,(long)departQueue->getLength());                  //Collect a sample of the departing queue length
       }
     }
    else                                                                       //Otherwise an airplane has finished landing from the Airspace
     {
      EV<<"[ParkingArea]: An airplane has finished landing, and it's parking"<<endl;
-   //  ++numParked;                                                             //Increase the number of parked airplanes
-     emit(parkedPlanes,++numParked);                                            //Collect a sample of the number of parked planes
+     emit(parkedPlanes,numParked);                                            //Collect a sample of the number of parked planes
+     ++numParked;                                                             //Increase the number of parked airplanes
      if(isParkingTimeRandom)                                                  //Compute the airplane's parking time, depending whether it is constant or random
       nextParkingTime = exponential(parkingTime,0);
      else

@@ -66,10 +66,10 @@ namespace airport
     if(airplane->isSelfMessage())                                                //Receiving a self-message means that a new airplane has entered the system
      {
       airplane->setTimestamp(simTime());                                         //Set the airplane arrival time in the system (using the "timestamp" field of the cMessage class, whose semantic is user-defined)
+      emit(holdingQueueSize,(long)holdingQueue->getLength());                    //Collect a sample of the holding queue length
       if(controlTower->notify())                                                 //Notify the Control Tower of the arrival, and if it reports that the plane is available for an immediate landing
        {
         EV<<"[Airspace]: A new airplane has arrived, and the control tower reports that is immediately available for landing"<<endl;
-        emit(holdingQueueSize,0);                                                //Collect a sample of the holding queue length (in this particular case, 0)
         emit(holdingQueueWaitingTime,0.0);                                       //Collect a sample of the departing queue waiting time (in this particular case, 0)
         if(isLandingTimeRandom)                                                  //Compute the airplane's landing time, depending whether it is constant or random
          nextLandingTime = exponential(landingTime,1);
@@ -82,7 +82,6 @@ namespace airport
         EV<<"[Airspace]: A new airplane has arrived, and has been enqueued for landing"<<endl;
         ((Airplane*)airplane)->setQueueArrivalTime(simTime().dbl());             //Set the airplane's arrival time into the holding queue
         holdingQueue->insert(airplane);                                          //Insert the airplane into the holding queue
-        emit(holdingQueueSize,(long)holdingQueue->getLength());                  //Collect a sample of the holding queue length
        }
       Airplane* nextPlane = new Airplane();                                      //Create the next airplane
       if(isInterArrivalTimeRandom)                                               //Compute the next airplane's arrival time, depending whether it is constant or random
