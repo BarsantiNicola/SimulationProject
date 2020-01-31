@@ -80,7 +80,7 @@ namespace airport
       else                                                                       //Otherwise, if the plane is not available for an immediate landing
        {
         EV<<"[Airspace]: A new airplane has arrived, and has been enqueued for landing"<<endl;
-        ((Airplane*)airplane)->setQueueArrivalTime(simTime().dbl());             //Set the airplane's arrival time into the holding queue
+        ((Airplane*)airplane)->setQueueArrivalTime(simTime());             //Set the airplane's arrival time into the holding queue
         holdingQueue->insert(airplane);                                          //Insert the airplane into the holding queue
         emit(holdingQueueSize,(long)holdingQueue->getLength());                  //Collect a sample of the holding queue length
        }
@@ -94,7 +94,7 @@ namespace airport
     else                                                                         //Otherwise an airplane has finished its takeoff from the Parking Area
      {
       EV<<"[Airspace]: An airplane has taken off and has left the system"<<endl;
-      emit(airportResponseTime,simTime().dbl()-airplane->getTimestamp().dbl());  //Collect a sample of the airport system response time
+      emit(airportResponseTime,simTime() - airplane->getTimestamp());  //Collect a sample of the airport system response time
       delete(airplane);                                                          //Remove the airplane from the system
       if(++departedPlanes < totalSamples)                                        //If less than "totalSamples" airplanes have departed the system, i.e. less that "totalSamples" samples have been collected
        controlTower->completed();                                                //Inform the Control Tower that the airplane's takeoff is complete
@@ -105,7 +105,7 @@ namespace airport
 
 
   /* Returns the time the oldest plane entered the holding queue, or "-1.0" if the queue is empty (called by the ControlTower module) */
-  double Airspace::getMaxQueueTime()
+  simtime_t Airspace::getMaxQueueTime()
    {
     Enter_Method("getMaxQueueTime()");                                             //Denotes that this member function is callable from other modules (in our case, the Control Tower)
     if(holdingQueue->isEmpty())
@@ -120,7 +120,7 @@ namespace airport
     Enter_Method("go()");                                                           //Denotes that this member function is callable from other modules (in our case, the Control Tower)
     Airplane* airplane = (Airplane*)holdingQueue->pop();                            //Extract the first airplane from the holding queue (which is always the oldest)
     EV<<"[Airspace]: The Control Tower notifies that the next airplane is allowed to land"<<endl;
-    emit(holdingQueueWaitingTime,simTime().dbl()-airplane->getQueueArrivalTime());  //Collect a sample of the holding queue waiting time
+    emit(holdingQueueWaitingTime, simTime() - airplane->getQueueArrivalTime());  //Collect a sample of the holding queue waiting time
     emit(holdingQueueSize,(long)holdingQueue->getLength());                         //Collect a sample of the holding queue length TODO: Unnecessary?
     if(isLandingTimeRandom)                                                         //Compute the airplane's landing time, depending whether it is constant or random
      nextLandingTime = exponential(landingTime,1);

@@ -45,8 +45,8 @@ namespace airport
    Enter_Method("completed()");       //Denotes that this member function is callable from other modules (in our case, the Airspace and the ParkingArea)
 
    //Retrieve the time the oldest airplanes arrived in the holdingQueue (Airspace) and the departQueue(ParkingArea)
-   double holdingQueueMaxTime = airspace->getMaxQueueTime();
-   double departQueueMaxTime = parkingArea->getMaxQueueTime();
+   simtime_t holdingQueueMaxTime = airspace->getMaxQueueTime();
+   simtime_t departQueueMaxTime = parkingArea->getMaxQueueTime();
 
    //Determine the next airplane allowed to use the landing strip for landing or takeoff, if any
    if(holdingQueueMaxTime < 0 && departQueueMaxTime < 0)    //If both queues are empty, set the landing strip as available and wait for the next airplane to arrive from the Airspace

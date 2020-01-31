@@ -219,12 +219,12 @@ void Airplane::parsimUnpack(omnetpp::cCommBuffer *b)
     doParsimUnpacking(b,this->queueArrivalTime);
 }
 
-double Airplane::getQueueArrivalTime() const
+::omnetpp::simtime_t Airplane::getQueueArrivalTime() const
 {
     return this->queueArrivalTime;
 }
 
-void Airplane::setQueueArrivalTime(double queueArrivalTime)
+void Airplane::setQueueArrivalTime(::omnetpp::simtime_t queueArrivalTime)
 {
     this->queueArrivalTime = queueArrivalTime;
 }
@@ -342,7 +342,7 @@ const char *AirplaneDescriptor::getFieldTypeString(int field) const
         field -= basedesc->getFieldCount();
     }
     static const char *fieldTypeStrings[] = {
-        "double",
+        "simtime_t",
     };
     return (field>=0 && field<1) ? fieldTypeStrings[field] : nullptr;
 }
@@ -411,7 +411,7 @@ std::string AirplaneDescriptor::getFieldValueAsString(void *object, int field, i
     }
     Airplane *pp = (Airplane *)object; (void)pp;
     switch (field) {
-        case 0: return double2string(pp->getQueueArrivalTime());
+        case 0: return simtime2string(pp->getQueueArrivalTime());
         default: return "";
     }
 }
@@ -426,7 +426,7 @@ bool AirplaneDescriptor::setFieldValueAsString(void *object, int field, int i, c
     }
     Airplane *pp = (Airplane *)object; (void)pp;
     switch (field) {
-        case 0: pp->setQueueArrivalTime(string2double(value)); return true;
+        case 0: pp->setQueueArrivalTime(string2simtime(value)); return true;
         default: return false;
     }
 }

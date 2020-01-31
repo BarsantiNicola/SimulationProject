@@ -27,8 +27,8 @@ namespace airport
 
     /*------------------Other--------------------*/
     long numParked;               //Number of airplanes currently parked
-    double nextParkingTime;       //Parking time of the next airplane
-    double nextTakeoffTime;       //Takeoff time of the next airplane
+    simtime_t nextParkingTime;       //Parking time of the next airplane
+    simtime_t nextTakeoffTime;       //Takeoff time of the next airplane
     cQueue* departQueue;          //FIFO queue of airplanes waiting for takeoff
     ControlTower* controlTower;   //Used for cross-module call purposes
 
@@ -39,7 +39,7 @@ namespace airport
     virtual ~ParkingArea();
 
    public:
-    virtual double getMaxQueueTime();  //Returns the time the oldest plane entered the departing queue, or "-1.0" if the queue is empty (called by the ControlTower module)
+    virtual simtime_t getMaxQueueTime();  //Returns the time the oldest plane entered the departing queue, or "-1.0" if the queue is empty (called by the ControlTower module)
     virtual void go();                 //Starts the takeoff of the oldest plane in the departing queue (called by the ControlTower module)
   };
 

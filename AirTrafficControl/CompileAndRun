@@ -8,6 +8,6 @@ echo "Launching $1 simulation"
 opp_makemake --deep -f -o AirTrafficControl
 make clean
 make all
-# opp_runall ./out/gcc-release/AirTrafficControl -u Cmdenv -c $0 -f ./simulations/omnetpp.ini
+opp_runall ./out/gcc-release/AirTrafficControl -u Cmdenv -c "$1" -f ./simulations/omnetpp.ini
 # Per mandare le simulazioni sequenziali
-./out/gcc-release/AirTrafficControl -u Cmdenv -c "$1" -f ./simulations/omnetpp.ini
+#./out/gcc-release/AirTrafficControl -u Cmdenv -c "$1" -f ./simulations/omnetpp.ini

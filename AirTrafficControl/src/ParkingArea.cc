@@ -64,7 +64,7 @@ namespace airport
      else                                                                     //Otherwise, if the plane is not available for an immediate takeoff
       {
        EV<<"[ParkingArea]: An airplane has finished parking, and has been enqueued for takeoff"<<endl;
-       ((Airplane*)airplane)->setQueueArrivalTime(simTime().dbl());           //Set the airplane's arrival time into the departing queue
+       ((Airplane*)airplane)->setQueueArrivalTime(simTime());           //Set the airplane's arrival time into the departing queue
        departQueue->insert(airplane);                                         //Insert the airplane into the departing queue
        emit(departQueueSize,(long)departQueue->getLength());                  //Collect a sample of the departing queue length
       }
@@ -84,7 +84,7 @@ namespace airport
 
 
  /* Returns the time the oldest plane entered the departing queue, or "-1.0" if the queue is empty (called by the ControlTower module) */
- double ParkingArea::getMaxQueueTime()
+ simtime_t ParkingArea::getMaxQueueTime()
   {
    Enter_Method("getMaxQueueTime()");                                         //Denotes that this member function is callable from other modules (in our case, the Control Tower)
    if(departQueue->isEmpty())
@@ -99,7 +99,7 @@ namespace airport
    Enter_Method("go()");                                                           //Denotes that this member function is callable from other modules (in our case, the Control Tower)
    Airplane* airplane = (Airplane*)departQueue->pop();                             //Extract the first airplane from the departing queue (which is always the oldest)
    EV<<"[ParkingArea]: The Control Tower notifies that the next airplane is allowed to takeoff"<<endl;
-   emit(departQueueWaitingTime,simTime().dbl()-airplane->getQueueArrivalTime());   //Collect a sample of the departing queue waiting time
+   emit(departQueueWaitingTime, simTime() - airplane->getQueueArrivalTime());   //Collect a sample of the departing queue waiting time
    emit(departQueueSize,(long)departQueue->getLength());                           //Collect a sample of the departing queue length TODO: Unnecessary?
    if(isTakeoffTimeRandom)                                                         //Compute the airplane's takeoff time, depending whether it is constant or random
     nextTakeoffTime = exponential(takeoffTime,1);
