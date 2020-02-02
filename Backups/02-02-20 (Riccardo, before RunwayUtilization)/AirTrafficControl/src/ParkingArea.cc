@@ -20,8 +20,6 @@ namespace airport
    departQueueSize = registerSignal("DepartQueueSize");
    departQueueWaitingTime = registerSignal("DepartQueueWaitingTime");
 
-   RunwayUse = registerSignal("RunwayUse");         //TODO: Remove?
-
    //Other Members Initializations
    numParked = 0;
    departQueue = new cQueue();
@@ -62,9 +60,6 @@ namespace airport
        else
         nextTakeoffTime = takeoffTime;
        sendDelayed((Airplane*)airplane, nextTakeoffTime, "out");              //Start the airplane's takeoff, which will complete in a "nextTakeoffTime" time
-
-       emit(RunwayUse,nextTakeoffTime);     //TODO: Remove?
-
       }
      else                                                                     //Otherwise, if the plane is not available for an immediate takeoff
       {
@@ -111,9 +106,6 @@ namespace airport
    else
     nextTakeoffTime = takeoffTime;
    sendDelayed(airplane, nextTakeoffTime, "out");                                  //Start the airplane's takeoff, which will complete in a "nextTakeoffTime" time
-
-   emit(RunwayUse,nextTakeoffTime);     //TODO: Remove?
-
   }
 
 

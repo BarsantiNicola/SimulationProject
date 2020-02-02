@@ -25,9 +25,6 @@ namespace airport
      simsignal_t holdingQueueWaitingTime;
      simsignal_t airportResponseTime;
 
-     simsignal_t TotalSimtime;  //TODO: remove?
-     simsignal_t RunwayUse;     //TODO: remove?
-
      /*------------------Other--------------------*/
      int departedPlanes;               //Number of airplanes that departed from airport (used to stop the simulation after TOTAL_AIRPLANES samples have been collected)
      simtime_t nextArrival;               //Arrival time of the next airplane

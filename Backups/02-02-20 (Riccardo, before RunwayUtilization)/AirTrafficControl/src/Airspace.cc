@@ -27,9 +27,6 @@ namespace airport
    holdingQueueWaitingTime = registerSignal("HoldingQueueWaitingTime");
    airportResponseTime = registerSignal("AirportResponseTime");
 
-   TotalSimtime = registerSignal("TotalSimtime");   //TODO: Remove?
-   RunwayUse = registerSignal("RunwayUse");         //TODO: Remove?
-
    //Other Members Initializations
    departedPlanes = 0;
    holdingQueue = new cQueue();
@@ -79,14 +76,11 @@ namespace airport
         else
          nextLandingTime = landingTime;
         sendDelayed(airplane, nextLandingTime, "out");                           //Start the airplane's landing, which will complete in a "nextLandingTime" time
-
-        emit(RunwayUse,nextLandingTime);     //TODO: Remove?
-
        }
       else                                                                       //Otherwise, if the plane is not available for an immediate landing
        {
         EV<<"[Airspace]: A new airplane has arrived, and has been enqueued for landing"<<endl;
-        ((Airplane*)airplane)->setQueueArrivalTime(simTime());                   //Set the airplane's arrival time into the holding queue
+        ((Airplane*)airplane)->setQueueArrivalTime(simTime());             //Set the airplane's arrival time into the holding queue
         holdingQueue->insert(airplane);                                          //Insert the airplane into the holding queue
         emit(holdingQueueSize,(long)holdingQueue->getLength());                  //Collect a sample of the holding queue length
        }
@@ -95,7 +89,7 @@ namespace airport
        nextArrival = exponential(interArrivalTime,0);
       else
        nextArrival = interArrivalTime;
-      scheduleAt(simTime() + nextArrival, nextPlane);                            //Schedule the next airplane's arrival
+      scheduleAt(simTime() + nextArrival, nextPlane);                     //Schedule the next airplane's arrival
      }
     else                                                                         //Otherwise an airplane has finished its takeoff from the Parking Area
      {
@@ -105,12 +99,7 @@ namespace airport
       if(++departedPlanes < totalSamples)                                        //If less than "totalSamples" airplanes have departed the system, i.e. less that "totalSamples" samples have been collected
        controlTower->completed();                                                //Inform the Control Tower that the airplane's takeoff is complete
       else                                                                       //Otherwise, end the simulation
-       {
-
-          emit(TotalSimtime,simTime());     //TODO: Remove?
-
-          endSimulation();
-       }
+       endSimulation();
      }
    }
 
@@ -138,9 +127,6 @@ namespace airport
     else
      nextLandingTime = landingTime;
     sendDelayed(airplane, nextLandingTime, "out");                                  //Start the airplane's landing, which will complete in a "nextLandingTime" time
-
-    emit(RunwayUse,nextLandingTime);     //TODO: Remove?
-
    }
 
 

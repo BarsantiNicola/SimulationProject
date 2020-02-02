@@ -25,8 +25,6 @@ namespace airport
     simsignal_t departQueueSize;
     simsignal_t departQueueWaitingTime;
 
-    simsignal_t RunwayUse;     //TODO: remove?
-
     /*------------------Other--------------------*/
     long numParked;               //Number of airplanes currently parked
     simtime_t nextParkingTime;       //Parking time of the next airplane
