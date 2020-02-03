@@ -18,6 +18,7 @@ from statsmodels.distributions.empirical_distribution import ECDF
 from datetime import datetime
 from sklearn.linear_model import LinearRegression
 from scipy.stats import rv_continuous
+from scipy.special import factorial
 
 # Update the subsequent vector when adding new configuration to omnet.ini
 SIM = 'Debug'
@@ -207,6 +208,7 @@ def discreteQQplot(x_sample, p=0.5):
     plt.legend()
 
 def plotDF(df, con_coef = None):
+    gc.enable()
     if con_coef is None or con_coef > 1 or con_coef < 0:
         con_coef = .95
     alpha = 1. - con_coef
@@ -233,6 +235,7 @@ def plotDF(df, con_coef = None):
                     plt.savefig(name.split(':')[0] + " " + itervars + " (iter = " + str(i) + ").png")
                     #plt.show()
                     plt.clf()
+                    gc.collect()
                 except OverflowError:
                     print(name + " " + itervars)
                     continue
@@ -270,20 +273,20 @@ def scatterDF(df, con_coef = None):
             s = []
             for row in vectors[(vectors.name == name) & (vectors.pt == pt)].itertuples():
                 plt.scatter(row.iat, row.cmean)
-                '''
-                to enable legend on plot, aside the dots
+                
+                #to enable legend on plot, aside the dots
                 if i%2 == 0: align ='right'
                 else: align = 'left'
                 i = i + 1
                 plt.text(row.iat, row.cmean, s = 'tot= ' + str(row.tot) + '\nlt=' +  str(row.lt), fontsize = 10, ha = align, va = 'center')
-                '''
+                
                 plt.errorbar(row.iat, row.cmean, yerr = (row.upper - row.lower))
-                s.append('tot= ' + str(row.tot) + ', lt=' +  str(row.lt))
-            plt.legend(pd.Series(s), loc='center left', bbox_to_anchor=(1, 0.5))
+                #s.append('tot= ' + str(row.tot) + ', lt=' +  str(row.lt))
+            #plt.legend(pd.Series(s), loc='center left', bbox_to_anchor=(1, 0.5))
             plt.title(name.split(':')[0] + "(pt=" + str(row.pt) + ")")
             plt.savefig(name.split(':')[0] + " (pt=" + str(row.pt) + ").png", quality = .95)
             plt.xlabel('iat')
-            plt.show()
+            #plt.show()
             plt.clf()
     
     os.system('cp *.png ./' + SIM + '/scatters')
@@ -349,6 +352,7 @@ def lorenz(df):
     os.system('rm -f *.png')
 
 def histDF(df):
+    gc.enable()
     if os.path.isdir('./' + SIM) is False:
         os.mkdir('./' + SIM)
     if os.path.isdir('./' + SIM + '/hist') is False:
@@ -358,48 +362,59 @@ def histDF(df):
     for itervars in df.iterationvars.unique():
         vectors = df[df.iterationvars == itervars][['iterationvars', 'name', 'vecvalue']]
         for name in vectors.name.unique():
-            if name != 'ParkedPlanes:vector': continue
             tmp = vectors[vectors.name == name]
             l = len(tmp)
             for i in range(l):
-                arr = tmp.iloc[i]['vecvalue']
-                mu = 1/arr.mean()
-
-                if name == 'HoldingQueueWaitingTime:vector' or name == 'DepartQueueWaitingTime:vector':
-                    _, bins, _ = plt.hist(arr, bins = 30, density = 1)
-                    x = np.arange(min(bins), max(bins), step = 0.5)
-                    y = mu*np.exp(-1*mu*x)
-                elif name == 'AirportResponseTime:vector': #Erlang
-                    _, bins, _ = plt.hist(arr, bins = 30, density = 1)
-                    x = np.arange(min(bins), max(bins), step = 0.5)
-                    k = 2
-                    mu = mu*k
-                    op1 = np.power(mu, k)
-                    op2 = np.power(x, k-1)
-                    op3 = np.exp(-1*x*mu)
-                    op4 = 1/math.factorial(k-1)
-                    y = op1*op2*op3*op4
-                elif name == 'HoldingQueueSize:vector' or name == 'DepartQueueSize:vector':
-                    _, bins, _ = plt.hist(arr, bins = np.arange(round(min(arr)), round(max(arr)), step = 1), density = 1)
-                    x = np.arange(min(bins), max(bins), step = 1)
-                    y = mu*((1-mu)**(x-1))
-                else:
-                    continue
-                    # don't now what the distribution of parked planes is 
-                    # to print this cancel the first line after the second for statement
-                    _, bins, _ = plt.hist(arr, bins = np.arange(round(min(arr)), round(max(arr)), step = 1), density = 1)
-                    x = np.arange(min(bins), max(bins), step = 1)
-                    print(mu)
-                    y = (mu**2)*((1-mu)**(x-2))*(x-1)
-                    return x,y
-                plt.plot(x, y, color='r')
-                plt.text(np.mean(x), .75*max(y), s = "$\lambda=" + str('%.4f'%(1/mu)) + "$")
-                plt.title(name.split(':')[0] + " " + itervars + "(iter = " + str(i) + ")")
-                plt.tight_layout()
-                plt.show()
-                #return arr
-                #plt.savefig(name.split(':')[0] + " " + itervars + " (iter=" + str(i) + ").png")
-                plt.clf()
+                try:
+                    arr = tmp.iloc[i]['vecvalue']
+                    mu = 1/arr.mean()
+                    if name == 'HoldingQueueWaitingTime:vector' or name == 'DepartQueueWaitingTime:vector':
+                        _, bins, _ = plt.hist(arr, bins = 30, density = 1)
+                        x = np.arange(min(bins), max(bins), step = 0.5)
+                        y = mu*np.exp(-1*mu*x)
+                        plt.plot(x, y, color='r')
+                        plt.text(np.mean(x), .75*max(y), s = "$\lambda=" + str('%.4f'%(1/mu)) + "$")
+                        plt.title(name.split(':')[0] + " " + itervars + "(iter = " + str(i) + ")")
+                        plt.tight_layout()
+                    elif name == 'AirportResponseTime:vector': #Hyperexponential (parameters estimation via MLE)
+                        _, bins, _ = plt.hist(arr, bins = 30, density = 1)
+                        x = np.arange(min(bins), max(bins), step = 0.5)
+                        c = arr.std()/arr.mean()
+                        mu = 2*mu
+                        op = math.sqrt(1 + 2*(c**2 - 1))
+                        l1 = mu/(1+op)
+                        l2 = mu/(1-op)
+                        y = l1*l2*(np.exp(-1*l2*x)-np.exp(-1*l1*x))/(l1-l2)
+                        plt.plot(x, y, color='r')
+                        plt.text(np.mean(x), .75*max(y), s = "$\lambda_1=" + str('%.4f'%l1) + "$ \n $\lambda_2=" + str('%.4f'%l2) +"$")
+                        plt.title(name.split(':')[0] + " " + itervars + "(iter = " + str(i) + ")")
+                        plt.tight_layout()
+                    elif name == 'HoldingQueueSize:vector' or name == 'DepartQueueSize:vector':
+                        _, bins, _ = plt.hist(arr, bins = np.arange(round(min(arr)), round(max(arr)), step = 1), density = 1)
+                        x = np.arange(min(bins), max(bins), step = 1)
+                        y = mu*((1-mu)**(x-1))
+                        plt.plot(x, y, color='r')
+                        plt.text(np.mean(x), .75*max(y), s = "$\lambda=" + str('%.4f'%(1/mu)) + "$")
+                        plt.title(name.split(':')[0] + " " + itervars + "(iter = " + str(i) + ")")
+                        plt.tight_layout()
+                    else:
+                        _, bins, _ = plt.hist(arr, bins = np.arange(round(min(arr)), round(max(arr)), step = 1), density = 1)
+                        
+                        mu= 1/mu
+                        x = np.arange(min(bins), max(bins), step = 1)
+                        y = (np.exp(-1*mu)*mu**x)/factorial(x)
+                        plt.plot(x+.5, y, color='r')          
+                        plt.text(np.mean(x), .75*max(y), s = "$\lambda=" + str('%.4f'%(mu)) + "$")
+                        plt.title(name.split(':')[0] + " " + itervars + "(iter = " + str(i) + ")")
+                        plt.tight_layout()
+                    #plt.show()
+                    plt.savefig(name.split(':')[0] + " " + itervars + " (iter=" + str(i) + ").png")
+                    plt.clf()
+                    gc.collect()
+                except BaseException as be:
+                    print(be)
+                    print(name)
+                    print(itervars)
     os.system('cp *.png ./' + SIM + '/hist')
     os.system('rm -f *.png')
 
@@ -466,11 +481,12 @@ def neff(arr):
     return n/(1 + 2*sums)
 
 class hexpon_gen(rv_continuous):
-    "Hyper Exponential distribution"
+    '''
+    Hyper-exponential distribution definition
+    lamba1 = 2, lambda2 = 1
+    '''
     def _pdf(self, x):
-        return .8*np.exp(-x) + 2*np.exp(-2*x)/5
-    def _cdf(self, x):
-        return .8*(1-np.exp(-x)) + .2*(1-np.exp(-2*x))
+        return 2*(np.exp(-1*x) - np.exp(-2*x))
 hexpon = hexpon_gen(a=0.0, name='hexpon')
     
 def boxplotDF(df):
@@ -521,14 +537,20 @@ def QQPlotDF(df):
     os.system('cp *.png ./' + SIM + '/qqplot')
     os.system('rm -f *.png')
 
-def F_w(iat, lt, tot, w):
-    mux = 1.0/lt
-    muy = 1.0/tot
-    muz = 1.0/iat
-    if w < 0:
-        return 1 - np.exp(w/muz)*(muz**2)/((muz+mux)*(muz+muy))
-    else:
-        return (1-np.exp(-1*w/mux))*(mux**2)/((mux-muy)*(mux+muz)) + (1-np.exp(-1*w/muy))*(muy**2)/((muy-mux)*(muy+muz)) + (muz**2)/((muz+mux)*(muz+muy))
-
+def F_w(iat, lt, tot, w): #Pr{LT + TOT - IAT <= w} (when w = 0 -> Pr{LT + TOT <= IAT})
+    if w >= 0:
+        return 1 - lt*iat*np.exp(-1*tot*w)/((tot-lt)*(tot+iat)) + iat*(2*lt - tot)*np.exp(-1*lt*w)/((lt+iat)*(tot-lt))
+    return lt*(1+iat)*np.exp(iat*w)/(iat+lt)
+    
+    
 def test(iat, lt, tot):
-    return stats.expon.rvs(lt) + stats.expon.rvs(tot) - stats.expon.rvs(iat)
+    return iat*((1/lt) + (1/tot))*lt*tot
+    
+
+
+
+
+
+
+
+
