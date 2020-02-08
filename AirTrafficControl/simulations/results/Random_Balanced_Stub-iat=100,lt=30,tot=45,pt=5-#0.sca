@@ -1,0 +1,443 @@
+version 2
+run Random_Balanced_Stub-0-20200208-18:58:57-2109
+attr configname Random_Balanced_Stub
+attr datetime 20200208-18:58:57
+attr experiment Random_Balanced_Stub
+attr inifile omnetpp.ini
+attr iterationvars "$iat=100, $lt=30, $tot=45, $pt=5"
+attr iterationvarsf iat=100,lt=30,tot=45,pt=5-
+attr measurement "$iat=100, $lt=30, $tot=45, $pt=5"
+attr network AirTrafficControl
+attr processid 2109
+attr repetition 0
+attr replication #0
+attr resultdir results
+attr runnumber 0
+attr seedset 0
+itervar iat 100
+itervar lt 30
+itervar pt 5
+itervar tot 45
+param **.airspace.isInterArrivalTimeRandom true
+param **.airspace.isLandingTimeRandom true
+param **.parkingarea.isParkingTimeRandom true
+param **.parkingarea.isTakeoffTimeRandom true
+param **.airspace.interArrivalTime 100
+param **.airspace.landingTime 30
+param **.parkingarea.takeoffTime 45
+param **.parkingarea.parkingTime 5
+param **.warmup 500
+param **.scaling 1
+param **.airspace.totalSamples 100000
+
+scalar AirTrafficControl.airspace AirportResponseTime:count 100000
+attr source AirportResponseTime
+attr title "Airport Response Time, count"
+scalar AirTrafficControl.airspace AirportResponseTime:min 1.328
+attr source AirportResponseTime
+attr title "Airport Response Time, min"
+scalar AirTrafficControl.airspace AirportResponseTime:max 2385.343
+attr source AirportResponseTime
+attr title "Airport Response Time, max"
+scalar AirTrafficControl.airspace AirportResponseTime:mean 290.32462344
+attr source AirportResponseTime
+attr title "Airport Response Time, mean"
+statistic AirTrafficControl.airspace AirportResponseTime:histogram
+field count 100000
+field mean 290.32462344
+field stddev 263.24563808698
+field min 1.328
+field max 2385.343
+field sum 29032462.344
+field sqrsum 15358595996.474
+attr source AirportResponseTime
+attr title "Airport Response Time, histogram"
+bin	-inf	0
+bin	0	6320
+bin	40	11637
+bin	80	11424
+bin	120	9908
+bin	160	8548
+bin	200	7270
+bin	240	6221
+bin	280	5552
+bin	320	4736
+bin	360	4114
+bin	400	3563
+bin	440	2927
+bin	480	2615
+bin	520	2148
+bin	560	1822
+bin	600	1474
+bin	640	1357
+bin	680	1188
+bin	720	931
+bin	760	908
+bin	800	783
+bin	840	678
+bin	880	526
+bin	920	438
+bin	960	424
+bin	1000	345
+bin	1040	276
+bin	1080	241
+bin	1120	214
+bin	1160	196
+bin	1200	163
+bin	1240	144
+bin	1280	139
+bin	1320	137
+bin	1360	89
+bin	1400	71
+bin	1440	65
+bin	1480	64
+bin	1520	49
+bin	1560	41
+bin	1600	42
+bin	1640	25
+bin	1680	23
+bin	1720	15
+bin	1760	20
+bin	1800	17
+bin	1840	16
+bin	1880	17
+bin	1920	16
+bin	1960	18
+bin	2000	12
+bin	2040	7
+bin	2080	5
+bin	2120	7
+bin	2160	7
+bin	2200	3
+bin	2240	0
+bin	2280	1
+bin	2320	1
+bin	2360	2
+bin	2400	0
+scalar AirTrafficControl.airspace HoldingQueueWaitingTime:count 100001
+attr source HoldingQueueWaitingTime
+attr title "Holding Queue Waiting Time, count"
+scalar AirTrafficControl.airspace HoldingQueueWaitingTime:min 0
+attr source HoldingQueueWaitingTime
+attr title "Holding Queue Waiting Time, min"
+scalar AirTrafficControl.airspace HoldingQueueWaitingTime:max 1470.741
+attr source HoldingQueueWaitingTime
+attr title "Holding Queue Waiting Time, max"
+scalar AirTrafficControl.airspace HoldingQueueWaitingTime:mean 107.33101152988
+attr source HoldingQueueWaitingTime
+attr title "Holding Queue Waiting Time, mean"
+statistic AirTrafficControl.airspace HoldingQueueWaitingTime:histogram
+field count 100001
+field mean 107.33101152988
+field stddev 138.02622369437
+field min 0
+field max 1470.741
+field sum 10733208.484
+field sqrsum 3057129966.2818
+attr source HoldingQueueWaitingTime
+attr title "Holding Queue Waiting Time, histogram"
+bin	-inf	0
+bin	0	34685
+bin	20	8442
+bin	40	7391
+bin	60	6373
+bin	80	5586
+bin	100	4998
+bin	120	4357
+bin	140	3689
+bin	160	3213
+bin	180	2824
+bin	200	2428
+bin	220	2037
+bin	240	1785
+bin	260	1660
+bin	280	1379
+bin	300	1173
+bin	320	1064
+bin	340	949
+bin	360	799
+bin	380	675
+bin	400	589
+bin	420	491
+bin	440	441
+bin	460	382
+bin	480	351
+bin	500	288
+bin	520	251
+bin	540	207
+bin	560	211
+bin	580	179
+bin	600	151
+bin	620	93
+bin	640	102
+bin	660	98
+bin	680	75
+bin	700	61
+bin	720	53
+bin	740	60
+bin	760	52
+bin	780	54
+bin	800	42
+bin	820	28
+bin	840	28
+bin	860	34
+bin	880	18
+bin	900	20
+bin	920	29
+bin	940	15
+bin	960	18
+bin	980	12
+bin	1000	10
+bin	1020	8
+bin	1040	8
+bin	1060	10
+bin	1080	8
+bin	1100	4
+bin	1120	6
+bin	1140	1
+bin	1160	1
+bin	1180	2
+bin	1200	1
+bin	1220	0
+bin	1240	0
+bin	1260	0
+bin	1280	0
+bin	1300	0
+bin	1320	0
+bin	1340	0
+bin	1360	0
+bin	1380	0
+bin	1400	0
+bin	1420	0
+bin	1440	1
+bin	1460	1
+bin	1480	0
+scalar AirTrafficControl.airspace HoldingQueueSize:count 175024
+attr source HoldingQueueSize
+attr title "Holding Queue Size, count"
+scalar AirTrafficControl.airspace HoldingQueueSize:min 0
+attr source HoldingQueueSize
+attr title "Holding Queue Size, min"
+scalar AirTrafficControl.airspace HoldingQueueSize:max 24
+attr source HoldingQueueSize
+attr title "Holding Queue Size, max"
+scalar AirTrafficControl.airspace HoldingQueueSize:mean 1.6589553432672
+attr source HoldingQueueSize
+attr title "Holding Queue Size, mean"
+statistic AirTrafficControl.airspace HoldingQueueSize:histogram
+field count 175024
+field mean 1.6589553432672
+field stddev 1.9037502016567
+field min 0
+field max 24
+field sum 290357
+field sqrsum 1116019
+attr source HoldingQueueSize
+attr title "Holding Queue Size, histogram"
+bin	-inf	0
+bin	0	55678
+bin	1	48817
+bin	2	28926
+bin	3	17108
+bin	4	10051
+bin	5	6019
+bin	6	3577
+bin	7	2056
+bin	8	1188
+bin	9	690
+bin	10	390
+bin	11	224
+bin	12	125
+bin	13	62
+bin	14	32
+bin	15	26
+bin	16	21
+bin	17	12
+bin	18	6
+bin	19	3
+bin	20	2
+bin	21	3
+bin	22	4
+bin	23	3
+bin	24	1
+bin	25	0
+scalar AirTrafficControl.airport.parkingarea DepartQueueWaitingTime:count 100000
+attr source DepartQueueWaitingTime
+attr title "Depart Queue Waiting Time, count"
+scalar AirTrafficControl.airport.parkingarea DepartQueueWaitingTime:min 0
+attr source DepartQueueWaitingTime
+attr title "Depart Queue Waiting Time, min"
+scalar AirTrafficControl.airport.parkingarea DepartQueueWaitingTime:max 1468.816
+attr source DepartQueueWaitingTime
+attr title "Depart Queue Waiting Time, max"
+scalar AirTrafficControl.airport.parkingarea DepartQueueWaitingTime:mean 103.16378356
+attr source DepartQueueWaitingTime
+attr title "Depart Queue Waiting Time, mean"
+statistic AirTrafficControl.airport.parkingarea DepartQueueWaitingTime:histogram
+field count 100000
+field mean 103.16378356
+field stddev 137.49649313693
+field min 0
+field max 1468.816
+field sum 10316378.356
+field sqrsum 2954786281.0511
+attr source DepartQueueWaitingTime
+attr title "Depart Queue Waiting Time, histogram"
+bin	-inf	0
+bin	0	36932
+bin	20	8565
+bin	40	7089
+bin	60	6281
+bin	80	5453
+bin	100	4687
+bin	120	4094
+bin	140	3484
+bin	160	3131
+bin	180	2626
+bin	200	2283
+bin	220	1952
+bin	240	1741
+bin	260	1523
+bin	280	1326
+bin	300	1130
+bin	320	1034
+bin	340	851
+bin	360	719
+bin	380	619
+bin	400	595
+bin	420	529
+bin	440	425
+bin	460	365
+bin	480	339
+bin	500	303
+bin	520	255
+bin	540	206
+bin	560	199
+bin	580	164
+bin	600	137
+bin	620	127
+bin	640	103
+bin	660	103
+bin	680	66
+bin	700	68
+bin	720	48
+bin	740	53
+bin	760	37
+bin	780	47
+bin	800	33
+bin	820	37
+bin	840	39
+bin	860	29
+bin	880	21
+bin	900	26
+bin	920	14
+bin	940	18
+bin	960	14
+bin	980	19
+bin	1000	13
+bin	1020	12
+bin	1040	6
+bin	1060	3
+bin	1080	8
+bin	1100	4
+bin	1120	3
+bin	1140	4
+bin	1160	1
+bin	1180	1
+bin	1200	0
+bin	1220	2
+bin	1240	1
+bin	1260	0
+bin	1280	0
+bin	1300	0
+bin	1320	0
+bin	1340	0
+bin	1360	0
+bin	1380	0
+bin	1400	1
+bin	1420	1
+bin	1440	0
+bin	1460	1
+bin	1480	0
+scalar AirTrafficControl.airport.parkingarea DepartQueueSize:count 172959
+attr source DepartQueueSize
+attr title "Depart Queue Sizes, count"
+scalar AirTrafficControl.airport.parkingarea DepartQueueSize:min 0
+attr source DepartQueueSize
+attr title "Depart Queue Sizes, min"
+scalar AirTrafficControl.airport.parkingarea DepartQueueSize:max 23
+attr source DepartQueueSize
+attr title "Depart Queue Sizes, max"
+scalar AirTrafficControl.airport.parkingarea DepartQueueSize:mean 1.6074156302939
+attr source DepartQueueSize
+attr title "Depart Queue Sizes, mean"
+statistic AirTrafficControl.airport.parkingarea DepartQueueSize:histogram
+field count 172959
+field mean 1.6074156302939
+field stddev 1.8830596445062
+field min 0
+field max 23
+field sum 278017
+field sqrsum 1060183
+attr source DepartQueueSize
+attr title "Depart Queue Sizes, histogram"
+bin	-inf	0
+bin	0	57501
+bin	1	48124
+bin	2	27862
+bin	3	16186
+bin	4	9621
+bin	5	5731
+bin	6	3308
+bin	7	1968
+bin	8	1171
+bin	9	638
+bin	10	362
+bin	11	210
+bin	12	113
+bin	13	60
+bin	14	34
+bin	15	27
+bin	16	16
+bin	17	5
+bin	18	5
+bin	19	4
+bin	20	2
+bin	21	2
+bin	22	5
+bin	23	4
+bin	24	0
+scalar AirTrafficControl.airport.parkingarea ParkedPlanes:count 200002
+attr source ParkedPlanes
+attr title "Parked PLanes, count"
+scalar AirTrafficControl.airport.parkingarea ParkedPlanes:min 0
+attr source ParkedPlanes
+attr title "Parked PLanes, min"
+scalar AirTrafficControl.airport.parkingarea ParkedPlanes:max 5
+attr source ParkedPlanes
+attr title "Parked PLanes, max"
+scalar AirTrafficControl.airport.parkingarea ParkedPlanes:mean 0.56123938760612
+attr source ParkedPlanes
+attr title "Parked PLanes, mean"
+statistic AirTrafficControl.airport.parkingarea ParkedPlanes:histogram
+field count 200002
+field mean 0.56123938760612
+field stddev 0.55800595252182
+field min 0
+field max 5
+field sum 112249
+field sqrsum 125273
+attr source ParkedPlanes
+attr title "Parked PLanes, histogram"
+bin	-inf	0
+bin	0	94066
+bin	1	99816
+bin	2	5932
+bin	3	184
+bin	4	3
+bin	5	1
+bin	6	0
+scalar AirTrafficControl Runwayutilization:last 0.75055190123364
+attr source sum(RunwayUse)/TotalSimtime
+attr title "Runway Utilization, last"
+
