@@ -16,6 +16,7 @@ from scipy.stats import rv_continuous
 from scipy.stats import rv_discrete
 from scipy.special import factorial
 from sklearn.metrics import r2_score
+from fitter import Fitter
 
 # Update the subsequent vector when adding new configuration to omnet.ini
 SIM = 'sim'
@@ -526,17 +527,27 @@ def makeInput(df):
         os.system('./factorial2kr.py --confidence 0.95 --residuals ./' + SIM + '/2kr/residuals/residuals' + filename + ' --qqnorm ./' + SIM + '/2kr/qqnorm/qqnorm' + filename + ' ./' + SIM + '/2kr/inputs/' + filename + ' > ./' + SIM + '/2kr/results/results' + filename)
         qqnorm('./' + SIM + '/2kr/qqnorm/qqnorm' + filename, filename)
 
-def qqnorm(file, title):
+def qqnorm(file, title, dist = None):
     residualQuantiles = []
+    if dist is None: dist = 'norm'
     with open(file) as f:
        for line in f:
            residualQuantiles.append(np.fromstring(line.rstrip('\n'), sep = ' ')[0])
-       pg.qqplot(residualQuantiles)
-       plt.title('QQ-Plot of residuals for ' + title)
-       plt.xlabel('Normal Quantile')
-       plt.ylabel('Residual Quantile')
-       plt.savefig('./' + SIM + '/2kr/qqnorm/qqnorm' + title + '.png')
-       plt.clf()
+    
+    residualQuantiles = np.array(residualQuantiles)
+    
+    tmp = open('./' + SIM + '/2kr/qqnorm/errors' + title + '.txt', 'w') 
+    tmp.write('Mean: ' + str(residualQuantiles.mean()) + '\nStDev: ' + str(residualQuantiles.std()) + '\nMin: ' + str(min(residualQuantiles)) + '\nMax: ' + str(max(residualQuantiles)) + '\n25Q: ' + str(np.quantile(residualQuantiles, .25)) + '\n50Q: ' + str(np.quantile(residualQuantiles, .5)) + '\n75Q: ' + str(np.quantile(residualQuantiles, .75)))
+    tmp.close()
+    
+    residualQuantiles = (residualQuantiles - residualQuantiles.mean())/residualQuantiles.std()
+    pg.qqplot(residualQuantiles, dist = dist)
+    plt.title('QQ-Plot of residuals for ' + title)
+    plt.xlabel('Normal Quantile')
+    plt.ylabel('Residual Quantile')
+    plt.savefig('./' + SIM + '/2kr/qqnorm/qqnorm' + title + '.png')
+    plt.show()
+    plt.clf()
        
 def residuals(file):
      residuals = []
