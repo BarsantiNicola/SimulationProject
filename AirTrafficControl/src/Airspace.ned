@@ -16,19 +16,19 @@ simple Airspace
         double landingTime = default(5);
         int totalSamples = default(1000000);
 
-  //----------------------------Statistics-related Parameters----------------------------  
+  		//----------------------------Statistics-related Parameters----------------------------  
 
         //1) Airplanes' Holding Queue Size
         @signal[HoldingQueueSize](type="long");
-        @statistic[HoldingQueueSize](source="HoldingQueueSize"; record=count, min, max, mean, histogram, vector; title = "Holding Queue Size");
+        @statistic[HoldingQueueSize](source="HoldingQueueSize"; record = mean, vector; title = "Holding Queue Size");
 
         //2) Airplanes' Holding Queue Waiting Time    
         @signal[HoldingQueueWaitingTime](type="double");
-        @statistic[HoldingQueueWaitingTime](source="HoldingQueueWaitingTime"; record=count, min, max, mean, histogram, vector; title = "Holding Queue Waiting Time");
+        @statistic[HoldingQueueWaitingTime](source="HoldingQueueWaitingTime"; record = mean, vector; title = "Holding Queue Waiting Time");
 
         //3) Airport System Response Time
         @signal[AirportResponseTime](type="double");
-        @statistic[AirportResponseTime](source="AirportResponseTime"; record=count, min, max, mean, histogram, vector; title = "Airport Response Time");
+        @statistic[AirportResponseTime](source="AirportResponseTime"; record = mean, vector; title = "Airport Response Time");
 
         @display("i=misc/cloud");
     gates:

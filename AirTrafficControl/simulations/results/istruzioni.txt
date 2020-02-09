@@ -1,0 +1,28 @@
+#COMPILARE E RUNNARE LE SIMULAZIONI
+Nella cartella ./PEVA/SimulationProject/AirTrafficControl lanciare il comando
+./CompileAndRun SIMULATION
+SIMULATION deve essere una configurazione definita nel file omnet.ini (controllare che i parametri siano quelli desiderati)
+
+#SCAVETOOL
+Nella cartella in cui sono stati salvati i file di uscita (*.vec e .*sca) lanciare il comando
+scavetool x *.vec -o SIMULATION.csv
+
+#LAVORARE I DATI CON PYTHON
+Portare il csv nella cartella ./PEVA/SimulationProject/AirTrafficControl/simulations/results
+Questa stessa cartella dovrà essere la working directory di spyder, consiglio di impostarla come defaul
+Aprire Spyder
+Dalla console lanciare il comando
+	from util import *
+(con questo comando farete un import di tutte le librerie definite nell'util.py, per cui se ci sono librerie non installate il comando lancerà un errore di dipendenza. Per risolvere eventuali problemi di dipendenza lanciare su un terminale di sistema il comando
+	pip3 install LIBRERIA
+)
+A questo lanciare dalla console di python il comando
+	df = extractVec('SIMULATION.csv')
+il data frame ora è salvato in df
+Per salvare i png delle immagini con l'andamento temporale lanciare il comando
+	plotDF(df)
+Per salvare tutti gli scatterplot cumulativi delle simulazioni al variare dei parametri e per avere un csv con un
+generale di tutte le simulazioni lanciare il comando
+	recap = scatterDF(df)
+il csv salvato sarà anche analizzabile in formato di PandasDataFrame nella variabile recap
+

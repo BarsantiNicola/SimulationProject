@@ -1,27 +1,24 @@
 import numpy as np
 import pandas as pd
 import os
-import fnmatch
-import shutil
-import seaborn as sns
-from scipy.signal._savitzky_golay import * # savgol_filter
+#from scipy.signal._savitzky_golay import * # savgol_filter
 import scipy.stats as stats
 import math
 import random
 import matplotlib.pyplot as plt
-import statsmodels.api as sm 
-import pylab as py 
+import statsmodels.api as sm
 import pingouin as pg
 from statsmodels.graphics import tsaplots
 import gc
-from statsmodels.distributions.empirical_distribution import ECDF
 from datetime import datetime
 from sklearn.linear_model import LinearRegression
 from scipy.stats import rv_continuous
+from scipy.stats import rv_discrete
 from scipy.special import factorial
+from sklearn.metrics import r2_score
 
 # Update the subsequent vector when adding new configuration to omnet.ini
-SIM = 'Debug'
+SIM = 'sim'
 def randomColor():
     r = random.randint(0,255)
     g = random.randint(0,255)
@@ -30,13 +27,6 @@ def randomColor():
     return rgb
 
 def color(r, g, b):
-    '''
-    minimum = 1
-    maximum = 5
-    rn = ((r - minimum)/(maximum - minimum))
-    gn = ((g - minimum)/(maximum - minimum))
-    bn = ((b - minimum)/(maximum - minimum))
-    '''
     random.seed(r)
     rn = random.random()
     random.seed(g)
@@ -78,44 +68,29 @@ def extractVec(s):
     vectors['neff'] = vectors.apply (lambda row: neff(np.array(row['vecvalue'])), axis=1)
     vectors['min'] = vectors.apply (lambda row: row['vecvalue'].min(), axis=1)
     vectors['max'] = vectors.apply (lambda row: row['vecvalue'].max(), axis=1)
+    vectors['uf'] = vectors.apply (lambda row: row['iat']/(row['lt'] + row['tot']), axis=1)
     #vectors['median'] = vectors.apply (lambda row: stats.median(row['vecvalue']), axis=1)
     return vectors
 
-def wide(vectors, name):
-    index = 'iat'
-    columns = ['lt', 'tot', 'pt']
-    a = vectors[vectors['name'] == name].pivot_table(index = index, columns = columns, values = 'Mean')
-    return a
-
-def getVecFileName():
-    parent_dir = os.getcwd()
-    files = os.listdir(os.getcwd())
-    for filename in fnmatch.filter(files, "*.vec"):
-        source = filename
-        filename = filename.split(".vec")
-        directory = filename[0]
-        path = os.path.join(parent_dir, directory)
-        cmd = 'scavetool x ' + path + '/*.vec -o ' + path + '/' + filename[0] + '.csv'
-        try:
-            os.mkdir(path)
-            print("Directory '%s' created successfully" % directory) 
-        except OSError as error:
-            print("Directory '%s' can not be created" % directory)
-            print(error)
-        try:
-            shutil.move(source, path)
-            print("File '%s' moved successfully" % source) 
-        except OSError as error:
-            print("File '%s' can not be moved" % source)
-            print(error)
-        os.system(cmd)
-        '''
-        TODO: SCRIPT SECTION THAT ANALYZES ALL THE CSV GOES HERE
-        '''
-    print('Ended')
+def extractSca(s):
+    vectors = pd.read_csv(s, converters = {
+    'attrvalue': parse_if_number,
+    'binedges': parse_ndarray,
+    'binvalues': parse_ndarray,
+    'vectime': parse_ndarray,
+    'vecvalue': parse_ndarray})
+    itervars_df = vectors.loc[vectors.type=='itervar', ['run', 'attrname', 'attrvalue']]
+    itervarspivot_df = itervars_df.pivot(index='run', columns='attrname', values='attrvalue')
+    vectors2 = vectors.merge(itervarspivot_df, left_on='run', right_index=True, how='outer')
+    itervarscol_df = vectors.loc[(vectors.type=='runattr') & (vectors.attrname.astype(str)=='iterationvars'), ['run', 'attrvalue']]
+    itervarscol_df = itervarscol_df.rename(columns={'attrvalue': 'iterationvars'})
+    vectors3 = vectors2.merge(itervarscol_df, left_on='run', right_on='run', how='outer')
+    vectors = vectors3[vectors3.type=='scalar']
+    vectors = vectors.drop(columns = ['run', 'type', 'module', 'attrname', 'attrvalue'])    
+    return vectors
 
 def scavetool():
-    os.system('scavetool x /media/luigi/88A4ABD5A4ABC3D2/results/*.vec -o /media/luigi/88A4ABD5A4ABC3D2/results/results.csv');
+    os.system('scavetool x /media/luigi/88A4ABD5A4ABC3D2/results/D*.sca -o /media/luigi/88A4ABD5A4ABC3D2/results/DeterministiRegimeStable.csv')
 
 def CI_bounds(vector, con_coef = None):
     n = len(vector)
@@ -128,84 +103,65 @@ def CI_bounds(vector, con_coef = None):
     standard_error = sigma / math.sqrt(n)
     return (x_bar - z_critical * standard_error, x_bar + z_critical * standard_error)
 
-def addIterationVar(df):
-    # df is a dataframe coming from pandas.read_X()
-    itervars_df = df.loc[df.type=='itervar', ['run', 'attrname', 'attrvalue']]    
-    itervarspivot_df = itervars_df.pivot(index='run', columns='attrname', values='attrvalue')
-    df2 = df.merge(itervarspivot_df, left_on='run', right_index=True, how='outer')
-    itervarscol_df = df.loc[(df.type=='runattr') & (df.attrname.astype(str)=='iterationvars'), ['run', 'attrvalue']]
-    itervarscol_df = itervarscol_df.rename(columns={'attrvalue': 'iterationvars'})
-    df3 = df2.merge(itervarscol_df, left_on='run', right_on='run', how='outer')
-    return df3
 
-def barp(vectors):
-    # AGGIUNGERE INTERVALLO DI CONFIDENZA
-    for name in vectors.name.unique():
-        table = vectors[(vectors['name'] == name)][['iat', 'tot', 'lt', 'pt', 'Mean']]
-        '''
-        print(name)
-        print(table)
-        '''
-        s = []
-        for i in range(0, table.index.size):
-            plt.scatter(table.iloc[i][0], table.iloc[i][4], c = color(table.iloc[i][1], table.iloc[i][2], table.iloc[i][3]))
-            s.append('tot= ' + str(table.iloc[i][1]) + ', lt=' +  str(table.iloc[i][2]) + ', pt=' + str(table.iloc[i][3]))
-        plt.legend(pd.Series(s))
-        plt.ylabel(name)
-        plt.xlabel('iat')
-        plt.show()
-
-def fillb(time_series_df):
-    smooth_path = time_series_df.rolling(20).mean()
-    path_deviation = 2 * time_series_df.rolling(20).std()
-    plt.plot(smooth_path, linewidth=2)
-    plt.fill_between(path_deviation.index, (smooth_path-2*path_deviation)[0], (smooth_path+2*path_deviation)[0], color='b', alpha=.1)
-
-def MS(df): # mean and standard deviation for a set of vectors
-    tmp = np.array([])
-    for j in range(0, len(df)):
-        tmp = np.concatenate((tmp, df.iloc[j]))
-    return (np.mean(tmp), np.std(tmp))
-
-def cilineplot(x, y, m, s, con_coef = None): # m = mean, s = standard deviation
+def qqplot(df, dist = 'expon', con_coef = 0.95, title = None):
     if con_coef is None or con_coef > 1 or con_coef < 0:
         con_coef = .95
-    alpha = 1. - con_coef
-    z_critical = stats.norm.ppf(q = con_coef + alpha/2)
-    standard_error = s / math.sqrt(len(x))
-    lower = y - z_critical * standard_error
-    upper = y + z_critical * standard_error
-    plt.plot(x, y, linewidth = 0.5)
-    plt.fill_between(x = x, y1 = lower, y2 = upper, color='b', alpha=.1)
+    df = df - df.mean()
+    if dist == 'expon': 
+        pg.qqplot(df, 'expon', confidence=.95)
+    else: 
+        pg.qqplot(df, hexpon, confidence=.95)
+        dist = 'Hyperexponential'
+    plt.xlabel('Theoretical quantiles (' + dist.capitalize() + ')')
+    if title != None: plt.title('QQPlot - ' + title)
 
-def qqplot(df, dist = 'expon', con_coef = 0.95):
-    if con_coef is None or con_coef > 1 or con_coef < 0:
-        con_coef = .95
-    if dist == 'erlang':
-        pg.qqplot(df, dist, sparams=(2,), confidence=.95)
-    else:
-        pg.qqplot(df, dist, confidence=.95)
-
-def correlogram(df, title = None, lags = 10):
+def correlogram(df):
     '''
-    Consult: (Luigi: preferisco questo)
+    Consult: 
         https://www.statsmodels.org/stable/generated/statsmodels.graphics.tsaplots.plot_acf.html
     and (for lag plot)
     https://github.com/2wavetech/How-to-Check-if-Time-Series-Data-is-Stationary-with-Python
     
     '''
-    tsaplots.plot_acf(df, lags=lags)
-    #pd.plotting.autocorrelation_plot(df, lags = lags)
+    tsaplots.plot_acf(df, lags = len(df)-2, fft = True, zero = False, unbiased = True, alpha = .025)
+    #pd.plotting.autocorrelation_plot(df)
 
-def discreteQQplot(x_sample, p=0.5):
-    """ Plot the Q-Q plot of the geometric distribution """
-    ecdf_sample = np.arange(1, len(x_sample) + 1)/(len(x_sample)+1)
-    x_theor = stats.geom.ppf(ecdf_sample, p=p)
-    plt.scatter(x_theor, x_theor, label='theor-theor quantiles')
-    plt.scatter(x_theor, x_sample, label='theor-sample quantiles', marker = '.')
-    plt.xlabel('Theoretical quantiles')
+class mygeom_gen(rv_discrete):
+
+    def _pmf(self, k, p):
+        return np.power(1-p, k) * p
+mygeom = mygeom_gen(a=0.0, name='mygeom')
+
+def discreteQQplot(x_sample, dist, title = None):
+    """ Plot the Q-Q plot of the Poisson and Geometric Disribution distribution """
+    
+    if dist == 'poisson':
+        
+        theor = stats.poisson.rvs(x_sample.mean(), size = len(x_sample))
+    elif dist == 'geom':
+        theor = mygeom.rvs(.1, size = 500)
+    else:
+        raise ValueError('Distribution not allowed')
+        return
+    
+    probs = np.arange(0, len(x_sample))/len(x_sample)
+    x = np.quantile(theor,probs)
+    y = np.quantile(x_sample,probs)
+    
+    plt.scatter(x, y)
+    x = x.reshape(-1,1)
+    y = y.reshape(-1,1)
+    
+    linear_regressor = LinearRegression() 
+    linear_regressor.fit(x, y)
+    Y_pred = linear_regressor.predict(x)
+    plt.plot(x, Y_pred, color='red')
+    score = r2_score(y, Y_pred)
+    plt.text(s = '$R^2 = $' + str('%.3f'%score), x = 0.6*max(theor), y = .25*max(x_sample))
+    if title != None: plt.title(title)
+    plt.xlabel('Theoretical quantiles (' + dist.capitalize() + ')')
     plt.ylabel('Sample quantiles')
-    plt.legend()
 
 def plotDF(df, con_coef = None):
     gc.enable()
@@ -225,24 +181,57 @@ def plotDF(df, con_coef = None):
             l = len(tmp)
             for i in range(l):
                 try:
-                    plt.plot(tmp.iloc[i]['vectime'], tmp.iloc[i]['vecvalue'], marker = '.', markersize = 0.01)
-                    errBand = z_critical*tmp.iloc[i]['StDev']/math.sqrt(tmp.iloc[i]['neff'])
-                    lower = tmp.iloc[i]['vecvalue'] - errBand
-                    upper = tmp.iloc[i]['vecvalue'] + errBand
+                    values = np.array(tmp.iloc[i]['vecvalue'])
+                    times = np.array(tmp.iloc[i]['vectime'])
                     
-                    plt.fill_between(x = tmp.iloc[i]['vectime'], y1 = lower, y2 = upper, color='b', alpha=.1)
+                    plt.plot(times, values, marker = '.', markersize = 0.01)
+                    errBand = z_critical*tmp.iloc[i]['StDev']/math.sqrt(tmp.iloc[i]['neff'])
+                    lower = values - errBand
+                    upper = values + errBand
+                    
+                    plt.fill_between(x = times, y1 = lower, y2 = upper, color='b', alpha=.1)
                     plt.title(name.split(':')[0] + " " + itervars + " (iter = " + str(i) + ")")
                     plt.savefig(name.split(':')[0] + " " + itervars + " (iter = " + str(i) + ").png")
                     #plt.show()
                     plt.clf()
-                    gc.collect()
                 except OverflowError:
                     print(name + " " + itervars)
                     continue
+                finally: gc.collect()
+        break
     os.system('cp *.png ./' + SIM + '/plots')
     os.system('rm -f *.png')
     
-def scatterDF(df, con_coef = None):
+def scatterDF(df, con_coef = None, deterministic = False):
+    
+    if deterministic == True:
+        vectors = df.groupby(['iat', 'lt', 'tot', 'pt', 'name']).apply(lambda x: pd.Series({
+            'mean': (x['value']).mean()})
+            )
+        vectors = vectors.reset_index()
+        
+        vectors['uf'] = vectors.apply (lambda row: (row['lt'] + row['tot'])/row['iat'], axis=1)
+        vectors.to_csv('DeterministiRegimeStable.csv')
+        vectors = vectors[['uf', 'pt', 'name','mean']]
+        
+        vectors = vectors.groupby(['uf', 'pt','name']).apply(lambda x: pd.Series({
+            'mean': (x['mean']).mean()})
+            )
+        vectors = vectors.reset_index()
+        for name in vectors.name.unique():
+            plt.title(name.split(':')[0])
+            plt.xlabel('Utilization Factor')
+            plt.ylabel('Mean')
+            s = []
+            for pt in vectors.pt.unique():
+                plt.plot(vectors[(vectors.name == name) & (vectors.pt == pt)]['uf'], vectors[(vectors.name == name) & (vectors.pt == pt)]['mean'])
+                s.append('pt = ' + str(pt))
+            plt.legend(pd.Series(s))
+            plt.show()
+            plt.clf()
+        return
+    
+    
     if con_coef is None or con_coef > 1 or con_coef < 0:
         con_coef = .95
         
@@ -256,7 +245,7 @@ def scatterDF(df, con_coef = None):
       })
     )
     vectors = vectors.reset_index()
-    
+
     vectors['upper'] = vectors.apply (lambda row: row.cmean + stats.norm.ppf(q = con_coef + alpha/2)*math.sqrt(row.cvar/row.cEffCount), axis=1)
     vectors['lower'] = vectors.apply (lambda row: row.cmean - stats.norm.ppf(q = con_coef + alpha/2)*math.sqrt(row.cvar/row.cEffCount), axis=1)
     vectors['error'] = vectors.apply (lambda row: row.upper - row.lower, axis = 1)
@@ -266,6 +255,8 @@ def scatterDF(df, con_coef = None):
     if os.path.isdir('./' + SIM + '/scatters') is False:
         os.mkdir('./' + SIM + '/scatters')
     os.system('rm -rf ./' + SIM + '/scatters/*')
+    
+    vectors.to_csv('./' + SIM + '/scatters/recap.csv')
     
     for name in vectors.name.unique():
         i = 1
@@ -291,8 +282,6 @@ def scatterDF(df, con_coef = None):
     
     os.system('cp *.png ./' + SIM + '/scatters')
     os.system('rm -f *.png')
-    
-    vectors.to_csv('./' + SIM + '/scatters/recap.csv')
     
     return vectors
 
@@ -369,6 +358,7 @@ def histDF(df):
                     arr = tmp.iloc[i]['vecvalue']
                     mu = 1/arr.mean()
                     if name == 'HoldingQueueWaitingTime:vector' or name == 'DepartQueueWaitingTime:vector':
+                        continue
                         _, bins, _ = plt.hist(arr, bins = 30, density = 1)
                         x = np.arange(min(bins), max(bins), step = 0.5)
                         y = mu*np.exp(-1*mu*x)
@@ -376,7 +366,8 @@ def histDF(df):
                         plt.text(np.mean(x), .75*max(y), s = "$\lambda=" + str('%.4f'%(1/mu)) + "$")
                         plt.title(name.split(':')[0] + " " + itervars + "(iter = " + str(i) + ")")
                         plt.tight_layout()
-                    elif name == 'AirportResponseTime:vector': #Hyperexponential (parameters estimation via MLE)
+                    elif name == 'AirportResponseTime:vector': #Hyperexponential (parameters estimation via MLE)  
+                        continue
                         _, bins, _ = plt.hist(arr, bins = 30, density = 1)
                         x = np.arange(min(bins), max(bins), step = 0.5)
                         c = arr.std()/arr.mean()
@@ -389,15 +380,18 @@ def histDF(df):
                         plt.text(np.mean(x), .75*max(y), s = "$\lambda_1=" + str('%.4f'%l1) + "$ \n $\lambda_2=" + str('%.4f'%l2) +"$")
                         plt.title(name.split(':')[0] + " " + itervars + "(iter = " + str(i) + ")")
                         plt.tight_layout()
+                        '''
                     elif name == 'HoldingQueueSize:vector' or name == 'DepartQueueSize:vector':
                         _, bins, _ = plt.hist(arr, bins = np.arange(round(min(arr)), round(max(arr)), step = 1), density = 1)
                         x = np.arange(min(bins), max(bins), step = 1)
                         y = mu*((1-mu)**(x-1))
-                        plt.plot(x, y, color='r')
+                        plt.plot(x+.5, y, color='r')
                         plt.text(np.mean(x), .75*max(y), s = "$\lambda=" + str('%.4f'%(1/mu)) + "$")
                         plt.title(name.split(':')[0] + " " + itervars + "(iter = " + str(i) + ")")
                         plt.tight_layout()
+                        '''
                     else:
+                        ''' Holding Queue Size, Depart Queue Size, Parked Planes '''
                         _, bins, _ = plt.hist(arr, bins = np.arange(round(min(arr)), round(max(arr)), step = 1), density = 1)
                         
                         mu= 1/mu
@@ -408,18 +402,24 @@ def histDF(df):
                         plt.title(name.split(':')[0] + " " + itervars + "(iter = " + str(i) + ")")
                         plt.tight_layout()
                     #plt.show()
+                     
                     plt.savefig(name.split(':')[0] + " " + itervars + " (iter=" + str(i) + ").png")
-                    plt.clf()
+                    plt.clf()   
                     gc.collect()
                 except BaseException as be:
                     print(be)
                     print(name)
                     print(itervars)
+                    plt.clf() 
+                    continue
+                finally: 
+                    gc.collect()
+                    
     os.system('cp *.png ./' + SIM + '/hist')
     os.system('rm -f *.png')
 
 def subsample(vector):
-    p = 0.0002
+    p = neff(vector)/len(vector)
     np.random.seed(datetime.now().microsecond)
     arr = np.array([])
     for x in vector:
@@ -433,39 +433,6 @@ def mergeVectors(df, name):
         res = np.concatenate((res, np.array(vectors.iloc[i])))
     return res
 
-def hyperExpQuantile(p):
-    '''
-    Returns the quantiles of an hyperexponential distribution
-    of degree 2 and with parameters:
-        labda_1 = 1, lambda:_2 = 2
-        p_1 = 0.5, p_2 = 0.5
-    '''
-    if p > 1 or p < 0:
-        return -1
-    return math.log(2/(math.sqrt(1 - 8*(p - 1))-1))
-    #return math.log(1/(1-p))/2*p
-
-
-def hyperQQ(vectors):
-    probs = np.arange(0, 10000)/9999
-    x = []
-    y = []
-    for p in probs:
-        try: tmp = hyperExpQuantile(p)
-        except ZeroDivisionError: continue
-        x.append(tmp)
-        y.append(np.quantile(vectors, p))
-    x_r = np.array(x).reshape((-1,1))
-    x = np.array(x)
-    y = np.array(y)
-    linear_regressor = LinearRegression() 
-    linear_regressor.fit(x_r, y) 
-    Y_pred = linear_regressor.predict(x_r)
-    plt.plot(x, Y_pred, color='red')
-    plt.scatter(x, np.array(y), color = 'b', marker = '.')
-    plt.show()
-    return linear_regressor.score(x_r, y)
-
 def neff(arr):
     '''
     References:
@@ -473,12 +440,12 @@ def neff(arr):
 
     '''
     n = len(arr)
-    acf = sm.tsa.acf(arr, nlags = n, fft = True)
+    acf = sm.tsa.acf(arr, nlags = n, fft = True, unbiased = False)
     sums = 0
-    for k in range(1, len(arr)):
-        sums = sums + (n-k)*acf[k]/n
+    for k in range(0,n):
+        sums = sums + (n-k)*(abs(acf[k]))/n
     
-    return n/(1 + 2*sums)
+    return n/(1+2*sums)
 
 class hexpon_gen(rv_continuous):
     '''
@@ -537,20 +504,65 @@ def QQPlotDF(df):
     os.system('cp *.png ./' + SIM + '/qqplot')
     os.system('rm -f *.png')
 
-def F_w(iat, lt, tot, w): #Pr{LT + TOT - IAT <= w} (when w = 0 -> Pr{LT + TOT <= IAT})
-    if w >= 0:
-        return 1 - lt*iat*np.exp(-1*tot*w)/((tot-lt)*(tot+iat)) + iat*(2*lt - tot)*np.exp(-1*lt*w)/((lt+iat)*(tot-lt))
-    return lt*(1+iat)*np.exp(iat*w)/(iat+lt)
-    
-    
-def test(iat, lt, tot):
-    return iat*((1/lt) + (1/tot))*lt*tot
-    
+# F_w(iat, lt, tot, z)
+def F_w(z, x, y, w): #Pr{LT + TOT - IAT <= w} (when w = 0 -> Pr{LT + TOT <= IAT}) 
+    if w>=0:
+        return 1 + y*z*np.exp(-1*x*w)/((x-y)*(x+z)) - x*z*np.exp(-1*y*w)/((x-y)*(y+z))
+    return x*y*np.exp(z*w)/((y+z)*(x+z))
+  
+def makeInput(df):
+    df = df[['name', 'value', 'iat', 'lt', 'tot', 'pt', 'iterationvars']]
+    df = df.sort_values(by=['pt', 'tot', 'lt', 'iat'], ascending=[0,0,0,0])
+    df.to_csv('./' + SIM + '/2kr/recap.csv')
+    for name in df.name.unique():
+        print(name)
+        # print in order: iat lt tot pt 
+        if(name.split(':')[1] != 'mean'): continue
+        txt = []
+        for iters in df.iterationvars.unique():
+            txt.append(df[(df.name == name) & (df.iterationvars == iters)]['value'].values)
+        filename = name.split(':')[0]
+        np.savetxt('./' + SIM + '/2kr/inputs/' + filename, np.array(txt))
+        os.system('./factorial2kr.py --confidence 0.95 --residuals ./' + SIM + '/2kr/residuals/residuals' + filename + ' --qqnorm ./' + SIM + '/2kr/qqnorm/qqnorm' + filename + ' ./' + SIM + '/2kr/inputs/' + filename + ' > ./' + SIM + '/2kr/results/results' + filename)
+        qqnorm('./' + SIM + '/2kr/qqnorm/qqnorm' + filename, filename)
 
+def qqnorm(file, title):
+    residualQuantiles = []
+    with open(file) as f:
+       for line in f:
+           residualQuantiles.append(np.fromstring(line.rstrip('\n'), sep = ' ')[0])
+       pg.qqplot(residualQuantiles)
+       plt.title('QQ-Plot of residuals for ' + title)
+       plt.xlabel('Normal Quantile')
+       plt.ylabel('Residual Quantile')
+       plt.savefig('./' + SIM + '/2kr/qqnorm/qqnorm' + title + '.png')
+       plt.clf()
+       
+def residuals(file):
+     residuals = []
+     predictedResponse = []
+     with open(file) as f:
+        for line in f:
+            tmp = np.fromstring(line.rstrip('\n'), sep = ' ')
+            residuals.append(tmp[0])
+            predictedResponse.append(tmp[1])
+        correlogram(residuals)
 
+def analysis2kr(s):
+    if os.path.isdir('./' + SIM) is False:
+        os.mkdir('./' + SIM)
+    if os.path.isdir('./' + SIM + '/2kr') is False:
+        os.mkdir('./' + SIM + '/2kr')
+    os.system('rm -rf ./' + SIM + '/2kr/*')
+    os.mkdir('./' + SIM + '/2kr/inputs')
+    os.mkdir('./' + SIM + '/2kr/qqnorm')
+    os.mkdir('./' + SIM + '/2kr/residuals')
+    os.mkdir('./' + SIM + '/2kr/results')
+    df = extractSca(s)
+    makeInput(df)
 
-
-
-
-
-
+def my_dist(z, x, y, size):
+    ar = []
+    for i in range(size):
+        ar.append(stats.expon.rvs(x) + stats.expon.rvs(y) - stats.expon.rvs(z))
+    return np.array(ar)

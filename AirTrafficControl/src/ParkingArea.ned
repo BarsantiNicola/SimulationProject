@@ -15,15 +15,15 @@ simple ParkingArea
 
         //1) Number of Parked Planes
         @signal[ParkedPlanes](type="long");
-        @statistic[ParkedPlanes](source="ParkedPlanes"; record=count, min, max, mean, histogram, vector; title = "Parked PLanes");
+        @statistic[ParkedPlanes](source="ParkedPlanes"; record = mean, vector; title = "Parked PLanes");
 
         //2) Airplanes' Departing Queue Size
         @signal[DepartQueueSize](type="long");
-        @statistic[DepartQueueSize](source="DepartQueueSize"; record=count, min, max, mean, histogram, vector; title = "Depart Queue Sizes" );
+        @statistic[DepartQueueSize](source="DepartQueueSize"; record = mean, vector; title = "Depart Queue Sizes" );
 
         //3) Departing Queue Waiting Time
         @signal[DepartQueueWaitingTime](type="double");
-        @statistic[DepartQueueWaitingTime](source="DepartQueueWaitingTime"; record=count, min, max, mean, histogram, vector; title = "Depart Queue Waiting Time");
+        @statistic[DepartQueueWaitingTime](source="DepartQueueWaitingTime"; record = mean, vector; title = "Depart Queue Waiting Time");
 
         @display("i=misc/town2");
     gates:
