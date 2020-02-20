@@ -1,0 +1,13 @@
+seguendo la formula a pagina 36 delle dispense di stea su data analysis,
+e ponendo r = 0.1 e un livello di confidenza del 95%, la media delle medie e delle varianze di tutte le
+simulazioni effettuate si ricavano i dati riportati nel csv di questa cartella. ovviamente questi dati "funzionano"
+sotto le ipotesi che i sample siano iid, cosa che come abbiamo dimostrato non è vera, ma se ci facciamo caso
+il sample width risulta essere dello stesso ordine do grandezza dei dati che sono stati decimati in fase di subsample.
+non so se questa cosa si possa mettere, comunque se vuoi lanciare questa stima con dati diversi il codice in python è
+
+(stats.norm.ppf(q = .975)*vectors['Std']/(r*vectors['Mean']))**2
+
+q = confidenceLevel + (1-confidencelevel)/2
+vectors['Std'] standard deviation dei dai (ci va uno scalare, la trovi indicizzata perché nel codice prendi un insieme di valori con cui poi costruisco il csv che trovi in questa cartella)
+r : relative accuracy
+vectors['Mean'] mean dei dati (stesso discorso per la stddev)
