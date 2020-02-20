@@ -1,0 +1,16 @@
+################################
+Airport Response Time lo possiamo considerare come TA+TO+TL+TP+(RITARDI NELLE DUE CODE)
+I primi tre valori ne abbiamo analizzato l'andamento nelle somme di 4 esponenziali, l'apporto del sistema è dato
+da un certo ritardo apportato dalle code e in funzione dell'utilization.
+All'aumentare dell'utilizzazione diminuisce la fairness di airport response time, questo ha perfettamente senso, diminuisce
+l'apporto del sistema(meno ritardo) e acquista un peso sempre maggiore la sommatoria dei tempi esponenziali.
+
+#################################
+All'aumentare dell'utilizzazione al contrario aumenta la fairness delle singole code, fa strano ma la dinamica all'interno delle code
+è totalmente differente da quella del sistema. Mentre per il sistema al diminuire dell'utilizzazione diminuisce l'apporto dei
+ritardi, all'interno di una coda abbiamo una fairness maggiore nell'avere ritardi molto correlati rispetto ad avere una coda vuota. 
+Più l'utilization è bassa più aumenterà la percentuale di aerei con tempi di attesa uguale a 0 e diminuiranno gli aerei con tempi di 
+attesa diversi da 0(e una curva di lorenz non viene influenzata dai valori nulli molto dai valori diversi da 0). Viceversa all'aumentare
+dell'utilizzazione gli aerei con tempi di attesa zero calano drasticamente di proabilità e gli aerei assumeranno con una probabilità
+comparabile un insieme di ritardi simili.
+Aggiunto istogrammi in funzione di utilizzazione per mostrare questa cosa.[DWT0-9]
