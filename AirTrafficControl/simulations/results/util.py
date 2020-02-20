@@ -69,8 +69,8 @@ def extractVec(s):
     vectors['neff'] = vectors.apply (lambda row: neff(np.array(row['vecvalue'])), axis=1)
     vectors['min'] = vectors.apply (lambda row: row['vecvalue'].min(), axis=1)
     vectors['max'] = vectors.apply (lambda row: row['vecvalue'].max(), axis=1)
-    vectors['uf'] = vectors.apply (lambda row: row['iat']/(row['lt'] + row['tot']), axis=1)
-    #vectors['median'] = vectors.apply (lambda row: stats.median(row['vecvalue']), axis=1)
+    vectors['uf'] = vectors.apply (lambda row: (row['lt'] + row['tot'])/row['iat'], axis=1)
+    vectors['expectedMeanPP'] = vectors.apply (lambda row: row['pt']/row['iat'], axis=1)    
     return vectors
 
 def extractSca(s):
@@ -125,7 +125,9 @@ def correlogram(df):
     https://github.com/2wavetech/How-to-Check-if-Time-Series-Data-is-Stationary-with-Python
     
     '''
-    tsaplots.plot_acf(df, lags = len(df)-2, fft = True, zero = False, unbiased = True, alpha = .025)
+    tsaplots.plot_acf(df, lags = len(df)-20, fft = True, zero = False, unbiased = True, alpha = .05, use_vlines = False)
+    plt.title('Airport Response Time (\u03C1 = 0.33)')
+    plt.xlabel('Lag (Max Lag = ' + str(len(df)-2)+')')
     #pd.plotting.autocorrelation_plot(df)
 
 class mygeom_gen(rv_discrete):
@@ -213,9 +215,9 @@ def scatterDF(df, con_coef = None, deterministic = False):
         
         vectors['uf'] = vectors.apply (lambda row: (row['lt'] + row['tot'])/row['iat'], axis=1)
         vectors.to_csv('DeterministiRegimeStable.csv')
-        vectors = vectors[['uf', 'pt', 'name','mean']]
+        vectors = vectors[['uf', 'pt','iat', 'name','mean']]
         
-        vectors = vectors.groupby(['uf', 'pt','name']).apply(lambda x: pd.Series({
+        vectors = vectors.groupby(['uf', 'pt', 'iat', 'name']).apply(lambda x: pd.Series({
             'mean': (x['mean']).mean()})
             )
         vectors = vectors.reset_index()
@@ -225,9 +227,10 @@ def scatterDF(df, con_coef = None, deterministic = False):
             plt.ylabel('Mean')
             s = []
             for pt in vectors.pt.unique():
-                plt.plot(vectors[(vectors.name == name) & (vectors.pt == pt)]['uf'], vectors[(vectors.name == name) & (vectors.pt == pt)]['mean'])
-                s.append('pt = ' + str(pt))
-            plt.legend(pd.Series(s))
+                for iat in vectors['iat'].unique():
+                    plt.plot(vectors[(vectors.name == name) & (vectors.pt == pt) & (vectors['iat'] == iat)]['uf'], vectors[(vectors.name == name) & (vectors.pt == pt) & (vectors['iat'] == iat)]['mean'])
+                    s.append('pt=' + str(int(pt)) + ' iat=' + str(int(iat)))
+                plt.legend(pd.Series(s))
             plt.show()
             plt.clf()
         return
@@ -262,7 +265,7 @@ def scatterDF(df, con_coef = None, deterministic = False):
     for name in vectors.name.unique():
         i = 1
         for pt in vectors.pt.unique():
-            s = []
+            #s = []
             for row in vectors[(vectors.name == name) & (vectors.pt == pt)].itertuples():
                 plt.scatter(row.iat, row.cmean)
                 
@@ -381,7 +384,7 @@ def histDF(df):
                         plt.text(np.mean(x), .75*max(y), s = "$\lambda_1=" + str('%.4f'%l1) + "$ \n $\lambda_2=" + str('%.4f'%l2) +"$")
                         plt.title(name.split(':')[0] + " " + itervars + "(iter = " + str(i) + ")")
                         plt.tight_layout()
-                        '''
+                        
                     elif name == 'HoldingQueueSize:vector' or name == 'DepartQueueSize:vector':
                         _, bins, _ = plt.hist(arr, bins = np.arange(round(min(arr)), round(max(arr)), step = 1), density = 1)
                         x = np.arange(min(bins), max(bins), step = 1)
@@ -390,7 +393,7 @@ def histDF(df):
                         plt.text(np.mean(x), .75*max(y), s = "$\lambda=" + str('%.4f'%(1/mu)) + "$")
                         plt.title(name.split(':')[0] + " " + itervars + "(iter = " + str(i) + ")")
                         plt.tight_layout()
-                        '''
+                        
                     else:
                         ''' Holding Queue Size, Depart Queue Size, Parked Planes '''
                         _, bins, _ = plt.hist(arr, bins = np.arange(round(min(arr)), round(max(arr)), step = 1), density = 1)
@@ -420,7 +423,7 @@ def histDF(df):
     os.system('rm -f *.png')
 
 def subsample(vector):
-    p = neff(vector)/len(vector)
+    p = .9
     np.random.seed(datetime.now().microsecond)
     arr = np.array([])
     for x in vector:
@@ -535,29 +538,41 @@ def qqnorm(file, title, dist = None):
            residualQuantiles.append(np.fromstring(line.rstrip('\n'), sep = ' ')[0])
     
     residualQuantiles = np.array(residualQuantiles)
-    
     tmp = open('./' + SIM + '/2kr/qqnorm/errors' + title + '.txt', 'w') 
-    tmp.write('Mean: ' + str(residualQuantiles.mean()) + '\nStDev: ' + str(residualQuantiles.std()) + '\nMin: ' + str(min(residualQuantiles)) + '\nMax: ' + str(max(residualQuantiles)) + '\n25Q: ' + str(np.quantile(residualQuantiles, .25)) + '\n50Q: ' + str(np.quantile(residualQuantiles, .5)) + '\n75Q: ' + str(np.quantile(residualQuantiles, .75)))
+    tmp.write('Mean: ' + str(residualQuantiles.mean()) + '\nStDev: ' + str(residualQuantiles.std()) + '\nSkewness: ' + str(stats.skew(residualQuantiles)) + '\nMin: ' + str(min(residualQuantiles)) + '\nMax: ' + str(max(residualQuantiles)) + '\n25Q: ' + str(np.quantile(residualQuantiles, .25)) + '\n50Q: ' + str(np.quantile(residualQuantiles, .5)) + '\n75Q: ' + str(np.quantile(residualQuantiles, .75)))
     tmp.close()
     
     residualQuantiles = (residualQuantiles - residualQuantiles.mean())/residualQuantiles.std()
-    pg.qqplot(residualQuantiles, dist = dist)
+    #Sono davvero t student?
+    
+    plt.hist(residualQuantiles, bins = 30)
+    plt.title('Errors for ' + title)
+    plt.savefig('./' + SIM + '/2kr/qqnorm/qqnormHist' + title + '.png')
+    plt.clf()
+    
+    residuals('./' + SIM + '/2kr/residuals/residuals' + title, title)
+    
+    pg.qqplot(residualQuantiles)
     plt.title('QQ-Plot of residuals for ' + title)
     plt.xlabel('Normal Quantile')
     plt.ylabel('Residual Quantile')
     plt.savefig('./' + SIM + '/2kr/qqnorm/qqnorm' + title + '.png')
-    plt.show()
-    plt.clf()
+    plt.clf()    
        
-def residuals(file):
+def residuals(file, title):
      residuals = []
      predictedResponse = []
      with open(file) as f:
         for line in f:
             tmp = np.fromstring(line.rstrip('\n'), sep = ' ')
-            residuals.append(tmp[0])
-            predictedResponse.append(tmp[1])
-        correlogram(residuals)
+            residuals.append(tmp[1])
+            predictedResponse.append(tmp[0])
+        plt.scatter(predictedResponse, residuals, marker = '.', s = .1)
+        plt.xlabel('Predicted Response')
+        plt.ylabel('Residuals')
+        plt.title('Predicted Responses vs. Residuals for ' + title)
+        plt.savefig('./' + SIM + '/2kr/residuals/residuals' + title + '.png')
+        plt.clf()
 
 def analysis2kr(s):
     if os.path.isdir('./' + SIM) is False:
@@ -577,3 +592,26 @@ def my_dist(z, x, y, size):
     for i in range(size):
         ar.append(stats.expon.rvs(x) + stats.expon.rvs(y) - stats.expon.rvs(z))
     return np.array(ar)
+
+def prova(df, con_coef = None):
+    if con_coef is None or con_coef > 1 or con_coef < 0:
+        con_coef = .95       
+    alpha = 1. - con_coef
+    vectors = df.groupby('name').apply(lambda x: pd.Series({
+          'Mean': x['Mean'].mean(),
+          'Std': x['StDev'].mean(),
+          })
+    )
+    vectors = vectors.reset_index()
+    vectors['expectedSampleWidth'] = (stats.norm.ppf(q = .975)*vectors['Std']/(0.1*vectors['Mean']))**2
+    return vectors
+
+    vectors = df.groupby(['iat', 'lt', 'tot', 'pt', 'name']).apply(lambda x: pd.Series({
+          'cmean': (x['Mean']*x['neff']).sum()/x['neff'].sum(),
+          'cEffCount': x['neff'].sum(),
+          'cvar':(x['neff'] * ( x['StDev']**2 + ( x['Mean'] - ( x['Mean'] * x['neff'] ).sum()/x['neff'].sum())**2)).sum()/x['neff'].sum()
+      })
+    )
+    vectors['upper'] = vectors.apply (lambda row: row.expectedPPMean + stats.norm.ppf(q = con_coef + alpha/2)*math.sqrt(row.expectedPPStd/row.cEffCount), axis=1)
+    vectors['lower'] = vectors.apply (lambda row: row.expectedPPMean - stats.norm.ppf(q = con_coef + alpha/2)*math.sqrt(row.expectedPPStd/row.cEffCount), axis=1)
+    vectors['error'] = vectors.apply (lambda row: row.expectedPPMean - row.lower, axis = 1)
