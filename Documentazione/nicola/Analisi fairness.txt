@@ -5,6 +5,21 @@ da un certo ritardo apportato dalle code e in funzione dell'utilization.
 All'aumentare dell'utilizzazione diminuisce la fairness di airport response time, questo ha perfettamente senso, diminuisce
 l'apporto del sistema(meno ritardo) e acquista un peso sempre maggiore la sommatoria dei tempi esponenziali.
 
+####AGGIUNTA PER INFLUENZA DI PARKING TIME
+
+Innazitutto possiamo vedere molto bene l'influenza della vicinanza dei valori, ho già detto che sono presenti
+due componenti in gioco, la prima è la sommatoria delle esponenziali la seconda è l'influenza del sistema.
+A utilization molto basse l'influenza del sistema è al minimo rimane quindi unicamente l'influenza della CLT.
+Questo si vede molto bene, più i valori sono simili tra loro più la fairness è bassa con un picco per tp=20(tutti i valori 
+molto vicini 20 20 15). All'aumentare della fairness ciò che prima avvantaggiava ora svantaggia, in quanto avere un parking
+time più basso rende subito disponibili gli aerei all'interno delle code, un parking time più alto invece ha un peso maggiore all'interno 
+dell'airport response time, infatti come è possibile vedere la variazione della fairness è basta questo perchè la unfairness di
+parking time(una esponenziale di vlor medio 240) vince sull'unfairness del sistema e tende a pilotarne l'andamento indipendentemente 
+dall'utilizzazione. Per gli altri valori questo effetto non lo abbiamo e abbiamo principalmente l'influenza del sistema che diventa sempre
+maggiore al crescere dell'utilizzazione. Con l'utilization il parking time influisce negativamente sulla fairness(più è basso peggio è) 
+questo perchè mette in circolo più aerei(siamo d'accordo che è un delay center ma funzionando su una esponenziale non da sempre lo stesso
+valore e più è alto il valor medio più è probabile escano valori "fuori scala" che permettono alle code di liberarsi)
+
 #################################
 All'aumentare dell'utilizzazione al contrario aumenta la fairness delle singole code, fa strano ma la dinamica all'interno delle code
 è totalmente differente da quella del sistema. Mentre per il sistema al diminuire dell'utilizzazione diminuisce l'apporto dei
@@ -14,3 +29,13 @@ attesa diversi da 0(e una curva di lorenz non viene influenzata dai valori nulli
 dell'utilizzazione gli aerei con tempi di attesa zero calano drasticamente di proabilità e gli aerei assumeranno con una probabilità
 comparabile un insieme di ritardi simili.
 Aggiunto istogrammi in funzione di utilizzazione per mostrare questa cosa.[DWT0-9]
+
+#### AGGIUNTA PER INFLUENZA DI PARKING TIME
+
+Con utilization bassa è meglio avere un parking time molto basso, questo perchè nel nostro sistema come nel caso deterministico
+aumenta la probabilità di trovare il sistema vuoto, come secondo valore troviamo 240, questo per il solito discorso di art, più è alto
+più è alta la varianza più è probabile escano valori fuori misura che permettono al sistema di svuotarsi. E infine 60 che non gode di 
+particolari benefici non è >> di iat per avere picchi abbastanza ati da svuotare il sistema frequentemente e non è basso abbastanza da 
+permettere al sistema di svuotarsi prima che giunga un nuovo aereo. Anche qua all'aumentare dell'utilization il parking time
+ottiene una funzione opposta i motivi sono i soliti di airport response time, è meglio avere un parking time alto che può permettere
+di svuotare il sistema. Fino a 70% utilization vero dopo non abbiamo un confidenza sufficiente per dirlo.
