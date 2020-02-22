@@ -362,7 +362,6 @@ def histDF(df):
                     arr = tmp.iloc[i]['vecvalue']
                     mu = 1/arr.mean()
                     if name == 'HoldingQueueWaitingTime:vector' or name == 'DepartQueueWaitingTime:vector':
-                        continue
                         _, bins, _ = plt.hist(arr, bins = 30, density = 1)
                         x = np.arange(min(bins), max(bins), step = 0.5)
                         y = mu*np.exp(-1*mu*x)
@@ -370,8 +369,7 @@ def histDF(df):
                         plt.text(np.mean(x), .75*max(y), s = "$\lambda=" + str('%.4f'%(1/mu)) + "$")
                         plt.title(name.split(':')[0] + " " + itervars + "(iter = " + str(i) + ")")
                         plt.tight_layout()
-                    elif name == 'AirportResponseTime:vector': #Hyperexponential (parameters estimation via MLE)  
-                        continue
+                    elif name == 'AirportResponseTime:vector': #Hypoexponential (parameters estimation via MLE)  
                         _, bins, _ = plt.hist(arr, bins = 30, density = 1)
                         x = np.arange(min(bins), max(bins), step = 0.5)
                         c = arr.std()/arr.mean()
@@ -592,26 +590,3 @@ def my_dist(z, x, y, size):
     for i in range(size):
         ar.append(stats.expon.rvs(x) + stats.expon.rvs(y) - stats.expon.rvs(z))
     return np.array(ar)
-
-def prova(df, con_coef = None):
-    if con_coef is None or con_coef > 1 or con_coef < 0:
-        con_coef = .95       
-    alpha = 1. - con_coef
-    vectors = df.groupby('name').apply(lambda x: pd.Series({
-          'Mean': x['Mean'].mean(),
-          'Std': x['StDev'].mean(),
-          })
-    )
-    vectors = vectors.reset_index()
-    vectors['expectedSampleWidth'] = (stats.norm.ppf(q = .975)*vectors['Std']/(0.1*vectors['Mean']))**2
-    return vectors
-
-    vectors = df.groupby(['iat', 'lt', 'tot', 'pt', 'name']).apply(lambda x: pd.Series({
-          'cmean': (x['Mean']*x['neff']).sum()/x['neff'].sum(),
-          'cEffCount': x['neff'].sum(),
-          'cvar':(x['neff'] * ( x['StDev']**2 + ( x['Mean'] - ( x['Mean'] * x['neff'] ).sum()/x['neff'].sum())**2)).sum()/x['neff'].sum()
-      })
-    )
-    vectors['upper'] = vectors.apply (lambda row: row.expectedPPMean + stats.norm.ppf(q = con_coef + alpha/2)*math.sqrt(row.expectedPPStd/row.cEffCount), axis=1)
-    vectors['lower'] = vectors.apply (lambda row: row.expectedPPMean - stats.norm.ppf(q = con_coef + alpha/2)*math.sqrt(row.expectedPPStd/row.cEffCount), axis=1)
-    vectors['error'] = vectors.apply (lambda row: row.expectedPPMean - row.lower, axis = 1)
