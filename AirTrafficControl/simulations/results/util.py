@@ -590,3 +590,19 @@ def my_dist(z, x, y, size):
     for i in range(size):
         ar.append(stats.expon.rvs(x) + stats.expon.rvs(y) - stats.expon.rvs(z))
     return np.array(ar)
+
+def mergeDF(directory):
+    files = os.listdir(directory)
+    first = True
+    for file in files:
+        if file.endswith("."+str('sca')):
+            if first is True:
+                os.system('scavetool x ' + directory + '/' + file + ' -o tmp.csv')
+                print('cia0')
+                df = extractSca('tmp.csv')
+                first = False
+            else:
+                os.system('scavetool x ' + directory + '/' + file + ' -o tmp.csv')
+                to_append = extractSca('tmp.csv')
+                df.append(to_append)
+    df.to_csv('recap.csv')
