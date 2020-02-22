@@ -605,4 +605,5 @@ def mergeDF(directory):
                 os.system('scavetool x ' + directory + '/' + file + ' -o tmp.csv')
                 to_append = extractSca('tmp.csv')
                 df.append(to_append)
+    df = df[['name', 'value', 'iat', 'lt', 'pt', 'tot', 'iterationvars']]
     df.to_csv('recap.csv')
