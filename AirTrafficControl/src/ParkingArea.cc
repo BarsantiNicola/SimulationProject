@@ -19,8 +19,7 @@ namespace airport
    parkedPlanes = registerSignal("ParkedPlanes");
    departQueueSize = registerSignal("DepartQueueSize");
    departQueueWaitingTime = registerSignal("DepartQueueWaitingTime");
-
-   RunwayUse = registerSignal("RunwayUse");         //TODO: Remove?
+   RunwayUse = registerSignal("RunwayUse");
 
    //Other Members Initializations
    numParked = 0;
@@ -49,27 +48,25 @@ namespace airport
  /* Module message handling function */
  void ParkingArea::handleMessage(cMessage* airplane)
   {
-   if(airplane->isSelfMessage())                                              //Receiving a self-message means that an airplane has expired its parking time and it's ready for takeoff
+   if(airplane->isSelfMessage())                                              //Receiving a self-message means that an airplane has expired its parking time and it's ready for take-off
     {
-     emit(parkedPlanes,--numParked);                                            //Collect a sample of the number of parked planes
-     if(controlTower->notify())                                               //Notify the Control Tower of the arrival, and if it reports that the plane is available for an immediate takeoff
+     emit(parkedPlanes,--numParked);                                          //Collect a sample of the number of parked planes
+     if(controlTower->notify())                                               //Notify the Control Tower of the arrival, and if it reports that the plane is available for an immediate take-off
       {
-       EV<<"[ParkingArea]: An airplane has finished parking, and the control tower reports that is immediately available for takeoff"<<endl;
+       EV<<"[ParkingArea]: An airplane has finished parking, and the control tower reports that is immediately available for take-off"<<endl;
        emit(departQueueSize,0);                                               //Collect a sample of the departing queue length (in this particular case, 0)
        emit(departQueueWaitingTime,0.0);                                      //Collect a sample of the departing queue waiting time (in this particular case, 0)
-       if(isTakeoffTimeRandom)                                                //Compute the airplane's takeoff time, depending whether it is constant or random
+       if(isTakeoffTimeRandom)                                                //Compute the airplane's take-off time, depending whether it is constant or random
         nextTakeoffTime = exponential(takeoffTime,1);
        else
         nextTakeoffTime = takeoffTime;
-       sendDelayed((Airplane*)airplane, nextTakeoffTime, "out");              //Start the airplane's takeoff, which will complete in a "nextTakeoffTime" time
-
-       emit(RunwayUse,nextTakeoffTime);     //TODO: Remove?
-
+       sendDelayed((Airplane*)airplane, nextTakeoffTime, "out");              //Start the airplane's take-off, which will complete in a "nextTakeoffTime" time
+       emit(RunwayUse,nextTakeoffTime);                                       //Add "nextTakeoffTime" to the total runway utilization time (for computing the system utilization factor)
       }
-     else                                                                     //Otherwise, if the plane is not available for an immediate takeoff
+     else                                                                     //Otherwise, if the plane is not available for an immediate take-off
       {
-       EV<<"[ParkingArea]: An airplane has finished parking, and has been enqueued for takeoff"<<endl;
-       ((Airplane*)airplane)->setQueueArrivalTime(simTime());           //Set the airplane's arrival time into the departing queue
+       EV<<"[ParkingArea]: An airplane has finished parking, and has been enqueued for take-off"<<endl;
+       ((Airplane*)airplane)->setQueueArrivalTime(simTime());                 //Set the airplane's arrival time into the departing queue
        departQueue->insert(airplane);                                         //Insert the airplane into the departing queue
        emit(departQueueSize,(long)departQueue->getLength());                  //Collect a sample of the departing queue length
       }
@@ -77,7 +74,7 @@ namespace airport
    else                                                                       //Otherwise an airplane has finished landing from the Airspace
     {
      EV<<"[ParkingArea]: An airplane has finished landing, and it's parking"<<endl;
-     emit(parkedPlanes,++numParked);                                            //Collect a sample of the number of parked planes
+     emit(parkedPlanes,++numParked);                                          //Collect a sample of the number of parked planes
      if(isParkingTimeRandom)                                                  //Compute the airplane's parking time, depending whether it is constant or random
       nextParkingTime = exponential(parkingTime,0);
      else
@@ -98,22 +95,20 @@ namespace airport
   }
 
 
- /* Starts the takeoff of the oldest plane in the departing queue (called by the ControlTower module) */
+ /* Starts the take-off of the oldest plane in the departing queue (called by the ControlTower module) */
  void ParkingArea::go()
   {
-   Enter_Method("go()");                                                           //Denotes that this member function is callable from other modules (in our case, the Control Tower)
-   Airplane* airplane = (Airplane*)departQueue->pop();                             //Extract the first airplane from the departing queue (which is always the oldest)
-   EV<<"[ParkingArea]: The Control Tower notifies that the next airplane is allowed to takeoff"<<endl;
-   emit(departQueueWaitingTime, simTime() - airplane->getQueueArrivalTime());   //Collect a sample of the departing queue waiting time
-   emit(departQueueSize,(long)departQueue->getLength());                           //Collect a sample of the departing queue length TODO: Unnecessary?
-   if(isTakeoffTimeRandom)                                                         //Compute the airplane's takeoff time, depending whether it is constant or random
+   Enter_Method("go()");                                                         //Denotes that this member function is callable from other modules (in our case, the Control Tower)
+   Airplane* airplane = (Airplane*)departQueue->pop();                           //Extract the first airplane from the departing queue (which is always the oldest)
+   EV<<"[ParkingArea]: The Control Tower notifies that the next airplane is allowed to take-off"<<endl;
+   emit(departQueueWaitingTime, simTime() - airplane->getQueueArrivalTime());    //Collect a sample of the departing queue waiting time
+   emit(departQueueSize,(long)departQueue->getLength());                         //Collect a sample of the departing queue length
+   if(isTakeoffTimeRandom)                                                       //Compute the airplane's take-off time, depending whether it is constant or random
     nextTakeoffTime = exponential(takeoffTime,1);
    else
     nextTakeoffTime = takeoffTime;
-   sendDelayed(airplane, nextTakeoffTime, "out");                                  //Start the airplane's takeoff, which will complete in a "nextTakeoffTime" time
-
-   emit(RunwayUse,nextTakeoffTime);     //TODO: Remove?
-
+   sendDelayed(airplane, nextTakeoffTime, "out");                                //Start the airplane's take-off, which will complete in a "nextTakeoffTime" time
+   emit(RunwayUse,nextTakeoffTime);                                              //Add "nextTakeoffTime" to the total runway utilization time (for computing the system utilization factor)
   }
 
 

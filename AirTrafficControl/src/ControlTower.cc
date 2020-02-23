@@ -33,13 +33,13 @@ namespace airport
    if(!landingStripOccupied)          //If the airport landing strip is not occupied
     {
      landingStripOccupied = true;     //Set the airport landing strip as occupied
-     return true;                     //Inform the caller that the airplane's landing or takeoff may begin immediately
+     return true;                     //Inform the caller that the airplane's landing or take-off may begin immediately
     }
    return false;                      //Inform the caller that the airplane must wait for its turn to use the landing strip
   }
 
 
- /* Notification that an airplane completed its takeoff or landing (called by the Airspace and ParkingArea modules) */
+ /* Notification that an airplane completed its take-off or landing (called by the Airspace and ParkingArea modules) */
  void ControlTower::completed()
   {
    Enter_Method("completed()");       //Denotes that this member function is callable from other modules (in our case, the Airspace and the ParkingArea)
@@ -48,7 +48,7 @@ namespace airport
    simtime_t holdingQueueMaxTime = airspace->getMaxQueueTime();
    simtime_t departQueueMaxTime = parkingArea->getMaxQueueTime();
 
-   //Determine the next airplane allowed to use the landing strip for landing or takeoff, if any
+   //Determine the next airplane allowed to use the landing strip for landing or take-off, if any
    if(holdingQueueMaxTime < 0 && departQueueMaxTime < 0)    //If both queues are empty, set the landing strip as available and wait for the next airplane to arrive from the Airspace
     landingStripOccupied = false;
    else
@@ -58,10 +58,10 @@ namespace airport
      if(departQueueMaxTime < 0)                             //Otherwise, if just the departQueue is empty, inform the Airspace that the next plane may land
       airspace->go();
      else
-      if(holdingQueueMaxTime < departQueueMaxTime)          //Otherwise if no queue is empty, assign the landing strip to the airplane with the oldest arrival times in both queues
-       airspace->go();                                      //(where in case the oldest planes in the queue share their arrival time, the airplane in the holdingQueue takes the priority)
-      else
-       parkingArea->go();
+      if(departQueueMaxTime < holdingQueueMaxTime)          //Otherwise if no queue is empty, assign the runway to the airplane with the oldest arrival times in both queues
+       parkingArea->go();                                   //(where if the oldest airplanes in both queues share their arrival times,which is possible due to quantization
+      else                                                  //roundings, the runway is assigned to the airplane requesting to land)
+       airspace->go();
   }
 
 }; //namespace

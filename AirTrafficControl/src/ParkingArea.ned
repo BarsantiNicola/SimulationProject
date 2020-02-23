@@ -11,21 +11,22 @@ simple ParkingArea
         double parkingTime = default(10);
         double takeoffTime = default(5);
 
-  //----------------------------Statistics-related Parameters----------------------------
-
-        //1) Number of Parked Planes
+        //--------------------------Signals and Statistics Declaration--------------------------
+         
+        //Parked Planes
         @signal[ParkedPlanes](type="long");
         @statistic[ParkedPlanes](source="ParkedPlanes"; record = mean, vector; title = "Parked PLanes");
 
-        //2) Airplanes' Departing Queue Size
+        //Depart Queue Size
         @signal[DepartQueueSize](type="long");
         @statistic[DepartQueueSize](source="DepartQueueSize"; record = mean, vector; title = "Depart Queue Sizes" );
 
-        //3) Departing Queue Waiting Time
+        //Depart Queue Waiting Time
         @signal[DepartQueueWaitingTime](type="double");
         @statistic[DepartQueueWaitingTime](source="DepartQueueWaitingTime"; record = mean, vector; title = "Depart Queue Waiting Time");
 
         @display("i=misc/town2");
+        
     gates:
         input in;    //From the Airspace
         output out;  //To the Airspace

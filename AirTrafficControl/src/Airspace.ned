@@ -5,28 +5,26 @@ simple Airspace
 {
     parameters:
         
-        // --------------------------------- Warm-up TIme ------------------------------------
-        double warmup;
-        double scaling;
-
         //----------------------------------Input Parameters----------------------------------   
         bool isInterArrivalTimeRandom = default(false);
         bool isLandingTimeRandom = default(false);
         double interArrivalTime = default(10);
         double landingTime = default(5);
         int totalSamples = default(1000000);
+        double warmup;                          //Base warm-up time
+        double scaling;                         //Warm-up time scaling factor
 
-  		//----------------------------Statistics-related Parameters----------------------------  
+  		//--------------------------Signals and Statistics Declaration--------------------------
 
-        //1) Airplanes' Holding Queue Size
+        //Holding Queue Size
         @signal[HoldingQueueSize](type="long");
         @statistic[HoldingQueueSize](source="HoldingQueueSize"; record = mean, vector; title = "Holding Queue Size");
 
-        //2) Airplanes' Holding Queue Waiting Time    
+        //Holding Queue Waiting Time    
         @signal[HoldingQueueWaitingTime](type="double");
         @statistic[HoldingQueueWaitingTime](source="HoldingQueueWaitingTime"; record = mean, vector; title = "Holding Queue Waiting Time");
 
-        //3) Airport System Response Time
+        //Airport Response Time
         @signal[AirportResponseTime](type="double");
         @statistic[AirportResponseTime](source="AirportResponseTime"; record = mean, vector; title = "Airport Response Time");
 

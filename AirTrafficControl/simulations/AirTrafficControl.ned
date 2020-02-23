@@ -8,11 +8,12 @@ network AirTrafficControl
 {
     @display("bgb=339,255;bgi=background/terrain");
 
-    //TODO remove? ----------------------------------
+    //--------------------------Signals and Statistics Declaration--------------------------
+    
+    //Empirical system utilization factor (rho)
     @signal[TotalSimtime](type="double");
     @signal[RunwayUse](type="double");
     @statistic[Runwayutilization](source=sum(RunwayUse)/TotalSimtime; record=last; title = "Runway Utilization");
-    //-----------------------------------------------
 
     submodules:
         airspace: Airspace {

@@ -9,12 +9,6 @@ namespace airport
  /* Module initializing function */
  void Airspace::initialize()
   {
-
-   // Warmup time
-   double warmup = par("warmup");
-   double scaling = par("scaling");
-   getSimulation()->setWarmupPeriod(scaling * warmup);
-
    //Input Parameters Initializations
    isInterArrivalTimeRandom = par("isInterArrivalTimeRandom").boolValue();
    isLandingTimeRandom = par("isLandingTimeRandom").boolValue();
@@ -26,13 +20,17 @@ namespace airport
    holdingQueueSize = registerSignal("HoldingQueueSize");
    holdingQueueWaitingTime = registerSignal("HoldingQueueWaitingTime");
    airportResponseTime = registerSignal("AirportResponseTime");
-
-   TotalSimtime = registerSignal("TotalSimtime");   //TODO: Remove?
-   RunwayUse = registerSignal("RunwayUse");         //TODO: Remove?
+   TotalSimtime = registerSignal("TotalSimtime");
+   RunwayUse = registerSignal("RunwayUse");
 
    //Other Members Initializations
    departedPlanes = 0;
    holdingQueue = new cQueue();
+
+   //Dynamic Warm-Up Time Configuration
+   double warmup = par("warmup");
+   double scaling = par("scaling");
+   getSimulation()->setWarmupPeriod(scaling * warmup);
 
    //this try-catch block is used to initialize the pointer to the ControlTower addressing the formal possibility of the cast_and_check function raising a "cRunTimeError" exception (which should never happen)
    try
@@ -46,11 +44,11 @@ namespace airport
 
    //Schedule the first event. i.e. the first airplane's arrival
    Airplane* firstPlane = new Airplane();
-   if(isInterArrivalTimeRandom)                                                                                                               //Compute the first airplane's arrival time, depending whether it is constant or random
+   if(isInterArrivalTimeRandom)                                                  //Compute the first airplane's arrival time, depending whether it is constant or random
     nextArrival = exponential(interArrivalTime,0);
    else
     nextArrival = interArrivalTime;
-   scheduleAt(nextArrival, firstPlane);                                                                                                       //Schedule the first airplane's arrival at time "nextArrival"
+   scheduleAt(nextArrival, firstPlane);                                          //Schedule the first airplane's arrival at time "nextArrival"
   }
 
 
@@ -79,9 +77,7 @@ namespace airport
         else
          nextLandingTime = landingTime;
         sendDelayed(airplane, nextLandingTime, "out");                           //Start the airplane's landing, which will complete in a "nextLandingTime" time
-
-        emit(RunwayUse,nextLandingTime);     //TODO: Remove?
-
+        emit(RunwayUse,nextLandingTime);                                         //Add "nextLandingTime" to the total runway utilization time (for computing the system utilization factor)
        }
       else                                                                       //Otherwise, if the plane is not available for an immediate landing
        {
@@ -97,19 +93,17 @@ namespace airport
        nextArrival = interArrivalTime;
       scheduleAt(simTime() + nextArrival, nextPlane);                            //Schedule the next airplane's arrival
      }
-    else                                                                         //Otherwise an airplane has finished its takeoff from the Parking Area
+    else                                                                         //Otherwise an airplane has finished its take-off from the Parking Area
      {
       EV<<"[Airspace]: An airplane has taken off and has left the system"<<endl;
-      emit(airportResponseTime,simTime() - airplane->getTimestamp());  //Collect a sample of the airport system response time
+      emit(airportResponseTime,simTime() - airplane->getTimestamp());            //Collect a sample of the airport system response time
       delete(airplane);                                                          //Remove the airplane from the system
-      if(++departedPlanes < totalSamples)                                        //If less than "totalSamples" airplanes have departed the system, i.e. less that "totalSamples" samples have been collected
-       controlTower->completed();                                                //Inform the Control Tower that the airplane's takeoff is complete
+      if(++departedPlanes < totalSamples)                                        //If less than "totalSamples" airplanes have departed the system, i.e. less that "totalSamples" of the AirportResponseTime have been collected
+       controlTower->completed();                                                //Inform the Control Tower that the airplane's take-off is complete
       else                                                                       //Otherwise, end the simulation
        {
-
-          emit(TotalSimtime,simTime());     //TODO: Remove?
-
-          endSimulation();
+        emit(TotalSimtime,simTime());                                            //Emit the total simulation time (for computing the system utilization factor)
+        endSimulation();
        }
      }
    }
@@ -118,10 +112,10 @@ namespace airport
   /* Returns the time the oldest plane entered the holding queue, or "-1.0" if the queue is empty (called by the ControlTower module) */
   simtime_t Airspace::getMaxQueueTime()
    {
-    Enter_Method("getMaxQueueTime()");                                             //Denotes that this member function is callable from other modules (in our case, the Control Tower)
+    Enter_Method("getMaxQueueTime()");                                           //Denotes that this member function is callable from other modules (in our case, the Control Tower)
     if(holdingQueue->isEmpty())
      return -1.0;
-    return ((Airplane*)(holdingQueue->front()))->getQueueArrivalTime();            //Being a FIFO queue the oldest airplane is the one in front
+    return ((Airplane*)(holdingQueue->front()))->getQueueArrivalTime();          //Being a FIFO queue the oldest airplane is the one in front
    }
 
 
@@ -131,16 +125,14 @@ namespace airport
     Enter_Method("go()");                                                           //Denotes that this member function is callable from other modules (in our case, the Control Tower)
     Airplane* airplane = (Airplane*)holdingQueue->pop();                            //Extract the first airplane from the holding queue (which is always the oldest)
     EV<<"[Airspace]: The Control Tower notifies that the next airplane is allowed to land"<<endl;
-    emit(holdingQueueWaitingTime, simTime() - airplane->getQueueArrivalTime());  //Collect a sample of the holding queue waiting time
-    emit(holdingQueueSize,(long)holdingQueue->getLength());                         //Collect a sample of the holding queue length TODO: Unnecessary?
+    emit(holdingQueueWaitingTime, simTime() - airplane->getQueueArrivalTime());     //Collect a sample of the holding queue waiting time
+    emit(holdingQueueSize,(long)holdingQueue->getLength());                         //Collect a sample of the holding queue length
     if(isLandingTimeRandom)                                                         //Compute the airplane's landing time, depending whether it is constant or random
      nextLandingTime = exponential(landingTime,1);
     else
      nextLandingTime = landingTime;
     sendDelayed(airplane, nextLandingTime, "out");                                  //Start the airplane's landing, which will complete in a "nextLandingTime" time
-
-    emit(RunwayUse,nextLandingTime);     //TODO: Remove?
-
+    emit(RunwayUse,nextLandingTime);                                                //Add "nextLandingTime" to the total runway utilization time (for computing the system utilization factor)
    }
 
 
