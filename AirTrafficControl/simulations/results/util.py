@@ -594,7 +594,10 @@ def my_dist(z, x, y, size):
 def mergeDF(directory):
     files = os.listdir(directory)
     first = True
+    it = 1
     for file in files:
+        print(it)
+        it = it + 1
         if file.endswith("."+str('sca')):
             if first is True:
                 os.system('scavetool x ' + directory + '/' + file + ' -o tmp.csv')
@@ -606,3 +609,55 @@ def mergeDF(directory):
                 to_append = extractSca('tmp.csv')
                 df = df.append(to_append)
     df.to_csv('recap.csv')
+    
+def prova(df, name, con_coef = .95):
+    
+    if con_coef is None or con_coef > 1 or con_coef < 0:
+        con_coef = .95
+        
+    alpha = 1. - con_coef
+    
+    df = df[['name', 'value', 'iat', 'lt', 'pt', 'tot', 'iterationvars']]
+    df = df[df.name == name]
+    df['uf'] = df.apply (lambda row: (row['lt'] + row['tot'])/row['iat'], axis=1)
+    df['ratio'] = df.apply (lambda row: row['pt']/row['iat'], axis=1)
+   
+    vectors = df.groupby(['iat', 'pt']).apply(lambda x: pd.Series({
+        'mean': (x['value']).mean(),
+        'var': (x['value']).var(),
+        'count': neff(np.array(x['value'])/10000)
+        })
+        )
+    vectors = vectors.reset_index()
+    
+    vectors['upper'] = vectors.apply (lambda row: row['mean'] + stats.norm.ppf(q = con_coef + alpha/2)*math.sqrt(row['var']/row['count']), axis=1)
+    vectors['lower'] = vectors.apply (lambda row: row['mean'] - stats.norm.ppf(q = con_coef + alpha/2)*math.sqrt(row['var']/row['count']), axis=1)
+    '''
+    x = np.array(vectors['ratio']).reshape(-1,1)
+    y = np.array(vectors['mean']).reshape(-1,1)
+    linear_regressor = LinearRegression() 
+    model = linear_regressor.fit(x, y)
+    Y_pred = linear_regressor.predict(x)
+    plt.plot(x, Y_pred, color='red')
+    score = r2_score(y, Y_pred)
+    print(score)
+    print(model.intercept_)
+    print(model.coef_)
+    plt.legend(pd.Series('$R^2 = $' + str('%.8f'%score)))
+    '''
+    s = []
+    for iat in vectors['iat'].unique():
+        plt.plot(vectors[(vectors['iat'] == iat)]['pt'], vectors[(vectors['iat'] == iat)]['mean'])
+        plt.fill_between(x = vectors[(vectors['iat'] == iat)]['pt'], y1 = vectors[(vectors['iat'] == iat)]['upper'], y2 = vectors[(vectors['iat'] == iat)]['lower'], color='b', alpha=.1)
+        s.append('$t_a$=' + str(int(iat)))
+    plt.legend(pd.Series(s), fontsize = 'small', loc = 'upper left')
+    
+    
+    #plt.plot(vectors['ratio'], vectors['mean'])
+    #plt.plot(vectors['ratio'], vectors['ratio'], color = 'r')
+    #plt.fill_between(x = vectors['ratio'], y1 = vectors['lower'], y2 = vectors['upper'], color='b', alpha=.1)
+    plt.xlabel(r'$t_p$')
+    plt.ylabel('Mean')
+    plt.title('Parked Planes')
+    plt.show()
+    return df
